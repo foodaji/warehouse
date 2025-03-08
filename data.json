@@ -1,0 +1,7 @@
+{
+  "users": [
+    { "id": 1, "username": "admin", "password": "12345", "name": "مدیر سیستم", "isAdmin": true }
+  ],
+  "items": [],
+  "transactions": []
+}
