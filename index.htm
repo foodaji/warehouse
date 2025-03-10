@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مدیریت انبارهای واحد و ساختمان و تاسیسات</title>
+    <link href="https://fonts.googleapis.com/css2?family=Vazir:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        /* استایل‌ها بدون تغییر باقی می‌مانند */
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --danger-color: #e74c3c;
+            --success-color: #27ae60;
+            --background: #f8f9fa;
+        }
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            background-color: var(--background);
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+        }
+        .loader {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #3498db;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .login-form {
+            width: 400px;
+            padding: 30px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .login-form h2 {
+            margin-bottom: 20px;
+            color: var(--primary-color);
+            font-family: 'Vazir', sans-serif;
+        }
+        .login-form .form-group {
+            margin-bottom: 15px;
+        }
+        .login-form input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        .login-form button {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            background-color: var(--success-color);
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            transition: opacity 0.3s;
+        }
+        .login-form button:hover {
+            opacity: 0.9;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .header h2 {
+            font-family: 'Vazir', sans-serif;
+            color: var(--primary-color);
+        }
+        .welcome-message {
+            font-size: 18px;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-bottom: 20px;
+        }
+        .dashboard-buttons {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .dashboard-buttons button {
+            padding: 20px;
+            font-size: 18px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: opacity 0.3s;
+            color: white;
+        }
+        .dashboard-buttons button:hover {
+            opacity: 0.9;
+        }
+        .dashboard-buttons button.add-item {
+            background-color: var(--success-color);
+        }
+        .dashboard-buttons button.withdraw-item {
+            background-color: var(--secondary-color);
+        }
+        .dashboard-buttons button.view-stock {
+            background-color: var(--primary-color);
+        }
+        .dashboard-buttons button.manage {
+            background-color: var(--danger-color);
+        }
+        .dashboard-buttons button.manage:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+        .flex-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        th, td {
+            padding: 12px;
+            border: 1px solid #eee;
+            text-align: center;
+        }
+        th {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        .management-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .management-buttons button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: opacity 0.3s;
+            color: white;
+        }
+        .management-buttons button.reports {
+            background-color: var(--primary-color);
+        }
+        .management-buttons button.user-management {
+            background-color: var(--secondary-color);
+        }
+        .management-buttons button.add-bulk-items {
+            background-color: var(--success-color);
+        }
+        .success-message {
+            color: var(--success-color);
+            margin-top: 10px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div id="app" class="container">
+        <div v-if="isLoading" class="overlay">
+            <div class="loader"></div>
+        </div>
+
+        <div v-if="!loggedIn" class="login-form">
+            <h2>ورود به سیستم</h2>
+            <div class="form-group">
+                <label for="username">نام کاربری</label>
+                <input type="text" id="username" v-model="username">
+            </div>
+            <div class="form-group">
+                <label for="password">رمز عبور</label>
+                <input type="password" id="password" v-model="password">
+            </div>
+            <button class="primary" @click="login">ورود</button>
+            <button class="primary" @click="loginWithoutCredentials" style="margin-top: 10px;">ورود بدون کاربری و رمز</button>
+        </div>
+
+        <div v-if="loggedIn">
+            <div class="header">
+                <h2>مدیریت انبارهای واحد ساختمان و تاسیسات</h2>
+                <button class="primary" @click="logout">خروج</button>
+            </div>
+
+            <div class="welcome-message">
+                خوش آمدید، {{ currentUser.name }}!
+            </div>
+
+            <div class="dashboard-buttons">
+                <button class="add-item" @click="showSection('addItem')">افزودن کالا به انبار</button>
+                <button class="withdraw-item" @click="showSection('withdraw')">برداشت از انبار</button>
+                <button class="view-stock" @click="showSection('stock')">موجودی انبار</button>
+                <button class="manage" @click="showSection('management')" :disabled="!currentUser.isAdmin">مدیریت</button>
+            </div>
+
+            <div v-if="activeSection === 'addItem'">
+                <h3>افزودن کالا به انبار</h3>
+                <div class="form-group">
+                    <label for="itemName">نام کالا</label>
+                    <input type="text" id="itemName" v-model="newItem.name" @input="searchItems">
+                    <ul v-if="filteredItems.length">
+                        <li v-for="item in filteredItems" :key="item.id" @click="selectItem(item)">
+                            {{ item.name }} ({{ item.unit }})
+                        </li>
+                    </ul>
+                </div>
+                <div class="form-group">
+                    <label for="itemQuantity">مقدار/تعداد</label>
+                    <input type="number" id="itemQuantity" v-model="newItem.quantity">
+                </div>
+                <div class="form-group">
+                    <label for="itemUnit">واحد</label>
+                    <input type="text" id="itemUnit" v-model="newItem.unit">
+                </div>
+                <div class="form-group">
+                    <label for="itemWarehouse">انبار</label>
+                    <select id="itemWarehouse" v-model="newItem.warehouse">
+                        <option value="انبار داخل واحد">انبار داخل واحد</option>
+                        <option value="انبار کانکس">انبار کانکس</option>
+                        <option value="انبار قدیم بزرگ">انبار قدیم بزرگ</option>
+                        <option value="انبار قدیم کوچک">انبار قدیم کوچک</option>
+                    </select>
+                </div>
+                <div class="flex-buttons">
+                    <button class="primary" @click="addItem">ذخیره</button>
+                    <button class="gray" @click="activeSection = ''">لغو</button>
+                </div>
+                <div v-if="showSuccessMessage" class="success-message">کالا با موفقیت افزوده شد!</div>
+            </div>
+
+            <div v-if="activeSection === 'withdraw'">
+                <h3>برداشت از انبار</h3>
+                <div class="form-group">
+                    <label for="withdrawItemName">نام کالا</label>
+                    <input type="text" id="withdrawItemName" v-model="withdrawItem.name" @input="searchWithdrawItems">
+                    <ul v-if="filteredItems.length">
+                        <li v-for="item in filteredItems" :key="item.id" @click="selectWithdrawItem(item)">
+                            {{ item.name }} ({{ item.unit }})
+                        </li>
+                    </ul>
+                </div>
+                <div class="form-group">
+                    <label for="withdrawQuantity">مقدار</label>
+                    <input type="number" id="withdrawQuantity" v-model="withdrawItem.quantity">
+                </div>
+                <div class="form-group">
+                    <label for="withdrawUnit">واحد</label>
+                    <input type="text" id="withdrawUnit" v-model="withdrawItem.unit" readonly>
+                </div>
+                <div class="form-group">
+                    <label for="withdrawUser">نام فرد برداشت کننده</label>
+                    <input type="text" id="withdrawUser" v-model="withdrawItem.user" :value="currentUser.name">
+                </div>
+                <div class="form-group">
+                    <label for="withdrawWarehouse">انبار</label>
+                    <select id="withdrawWarehouse" v-model="withdrawItem.warehouse">
+                        <option v-for="warehouse in availableWarehouses" :key="warehouse.name" :value="warehouse.name">
+                            {{ warehouse.name }} ({{ warehouse.quantity }})
+                        </option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="withdrawLocation">محل استفاده</label>
+                    <input type="text" id="withdrawLocation" v-model="withdrawItem.location">
+                </div>
+                <div class="flex-buttons">
+                    <button class="primary" @click="submitWithdraw">ثبت</button>
+                    <button class="gray" @click="activeSection = ''">لغو</button>
+                </div>
+                <div v-if="withdrawSuccessMessage" class="success-message">برداشت کالا ثبت شد!</div>
+            </div>
+
+            <div v-if="activeSection === 'stock'">
+                <h3>موجودی انبار</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>نام کالا</th>
+                            <th>واحد</th>
+                            <th>مجموع موجودی</th>
+                            <th>موجودی در انبارها</th>
+                            <th>عملیات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="(item, index) in groupedItems" :key="index">
+                            <td>{{ item.name }}</td>
+                            <td>{{ item.unit }}</td>
+                            <td>{{ item.totalQuantity }}</td>
+                            <td>
+                                <ul>
+                                    <li v-for="warehouse in item.warehouses" :key="warehouse.name">
+                                        {{ warehouse.name }}: {{ warehouse.quantity }}
+                                    </li>
+                                </ul>
+                            </td>
+                            <td>
+                                <button class="primary" @click="withdrawFromStock(item)">برداشت</button>
+                                <button class="danger" @click="confirmDeleteItem(item)" v-if="currentUser.isAdmin">حذف</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div v-if="activeSection === 'management'">
+                <h3>مدیریت</h3>
+                <div class="form-group">
+                    <label for="managementPassword">رمز عبور</label>
+                    <input type="password" id="managementPassword" v-model="managementPassword">
+                </div>
+                <div class="flex-buttons">
+                    <button class="primary" @click="checkManagementPassword">تایید</button>
+                    <button class="gray" @click="activeSection = ''">لغو</button>
+                </div>
+
+                <div v-if="managementAccess" class="management-buttons">
+                    <button class="reports" @click="showManagementSection('reports')">گزارش گیری</button>
+                    <button class="user-management" @click="showManagementSection('userManagement')">مدیریت کاربران</button>
+                    <button class="add-bulk-items" @click="showManagementSection('bulkItems')">افزودن لیست کالا</button>
+                </div>
+
+                <div v-if="managementSection === 'reports'">
+                    <h4>گزارش برداشت‌ها</h4>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>تاریخ</th>
+                                <th>ساعت</th>
+                                <th>نام کالا</th>
+                                <th>مقدار</th>
+                                <th>فرد برداشت کننده</th>
+                                <th>محل استفاده</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="transaction in sortedTransactions" :key="transaction.location">
+                                <td>{{ transaction.date }}</td>
+                                <td>{{ transaction.time }}</td>
+                                <td>{{ transaction.item }}</td>
+                                <td>{{ transaction.quantity }}</td>
+                                <td>{{ transaction.user }}</td>
+                                <td>{{ transaction.location }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div v-if="managementSection === 'userManagement'">
+                    <h4>مدیریت کاربران</h4>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>نام کاربری</th>
+                                <th>نام کامل</th>
+                                <th>دسترسی</th>
+                                <th>عملیات</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="user in users" :key="user.id">
+                                <td>{{ user.username }}</td>
+                                <td>{{ user.name }}</td>
+                                <td>{{ user.isAdmin ? 'ادمین' : 'کاربر عادی' }}</td>
+                                <td>
+                                    <button class="primary" @click="editUser(user)">ویرایش</button>
+                                    <button class="danger" @click="confirmDeleteUser(user.id)">حذف</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div v-if="editingUser">
+                        <h4>ویرایش کاربر</h4>
+                        <div class="form-group">
+                            <label for="editUserName">نام و نام خانوادگی</label>
+                            <input type="text" id="editUserName" v-model="editingUser.name">
+                        </div>
+                        <div class="form-group">
+                            <label for="editUsername">نام کاربری</label>
+                            <input type="text" id="editUsername" v-model="editingUser.username">
+                        </div>
+                        <div class="form-group">
+                            <label for="editPassword">رمز عبور</label>
+                            <input type="password" id="editPassword" v-model="editingUser.password">
+                        </div>
+                        <div class="form-group">
+                            <label for="editAccessLevel">سطح دسترسی</label>
+                            <select id="editAccessLevel" v-model="editingUser.isAdmin">
+                                <option :value="true">ادمین</option>
+                                <option :value="false">کاربر عادی</option>
+                            </select>
+                        </div>
+                        <button class="primary" @click="updateUser(editingUser)">ذخیره تغییرات</button>
+                        <button class="gray" @click="editingUser = null">لغو</button>
+                    </div>
+
+                    <h4>افزودن کاربر جدید</h4>
+                    <div class="form-group">
+                        <label for="newUserName">نام و نام خانوادگی</label>
+                        <input type="text" id="newUserName" v-model="newUser.name">
+                    </div>
+                    <div class="form-group">
+                        <label for="newUsername">نام کاربری</label>
+                        <input type="text" id="newUsername" v-model="newUser.username">
+                    </div>
+                    <div class="form-group">
+                        <label for="newPassword">رمز عبور</label>
+                        <input type="password" id="newPassword" v-model="newUser.password">
+                    </div>
+                    <div class="form-group">
+                        <label for="accessLevel">سطح دسترسی</label>
+                        <select id="accessLevel" v-model="newUser.isAdmin">
+                            <option :value="true">ادمین</option>
+                            <option :value="false">کاربر عادی</option>
+                        </select>
+                    </div>
+                    <button class="primary" @click="addUser">افزودن کاربر</button>
+                </div>
+
+                <div v-if="managementSection === 'bulkItems'">
+                    <h4>افزودن لیست کالا</h4>
+                    <div class="form-group">
+                        <textarea placeholder="لیست کالاها (فرمت: نام کالا,واحد)" v-model="bulkItems"></textarea>
+                    </div>
+                    <button class="primary" @click="addBulkItems">ذخیره</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="script.js"></script>
+    <script>
+        const { createApp } = Vue;
+
+        createApp({
+            data() {
+                return {
+                    isLoading: false,
+                    loggedIn: false,
+                    username: '',
+                    password: '',
+                    currentUser: null,
+                    items: [],
+                    users: [],
+                    transactions: [],
+                    activeSection: '',
+                    managementSection: '',
+                    managementAccess: false,
+                    managementPassword: '',
+                    newItem: { name: '', quantity: 0, unit: '', warehouse: 'انبار داخل واحد' },
+                    withdrawItem: { name: '', quantity: 0, unit: '', user: '', location: '', warehouse: '' },
+                    filteredItems: [],
+                    newUser: { name: '', username: '', password: '', isAdmin: false },
+                    bulkItems: '',
+                    showSuccessMessage: false,
+                    withdrawSuccessMessage: false,
+                    availableWarehouses: [],
+                    editingUser: null
+                };
+            },
+            mounted() {
+                this.initializeData();
+            },
+            computed: {
+                sortedTransactions() {
+                    return this.transactions.slice().sort((a, b) => {
+                        const dateA = new Date(`${a.date} ${a.time}`);
+                        const dateB = new Date(`${b.date} ${b.time}`);
+                        return dateB - dateA;
+                    });
+                },
+                groupedItems() {
+                    const grouped = {};
+                    this.items.forEach(item => {
+                        if (!grouped[item.name]) {
+                            grouped[item.name] = {
+                                name: item.name,
+                                unit: item.unit,
+                                totalQuantity: 0,
+                                warehouses: []
+                            };
+                        }
+                        const warehouseEntry = grouped[item.name].warehouses.find(wh => wh.name === item.warehouse);
+                        if (warehouseEntry) {
+                            warehouseEntry.quantity += item.quantity;
+                        } else {
+                            grouped[item.name].warehouses.push({
+                                name: item.warehouse,
+                                quantity: item.quantity
+                            });
+                        }
+                        grouped[item.name].totalQuantity += item.quantity;
+                    });
+                    Object.values(grouped).forEach(item => {
+                        item.warehouses = item.warehouses.filter(warehouse => warehouse.quantity > 0);
+                    });
+                    return Object.values(grouped);
+                }
+            },
+            methods: {
+                async initializeData() {
+                    this.isLoading = true;
+                    try {
+                        const data = await fetchData();
+                        this.users = data.record.users || [];
+                        this.items = data.record.items || [];
+                        this.transactions = data.record.transactions || [];
+                    } catch (error) {
+                        console.error('Error fetching data:', error);
+                    }
+                    this.isLoading = false;
+                },
+                async login() {
+                    this.isLoading = true;
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    const user = this.users.find(u => 
+                        u.username === this.username && 
+                        u.password === this.password
+                    );
+                    if (user) {
+                        this.loggedIn = true;
+                        this.currentUser = user;
+                        this.username = '';
+                        this.password = '';
+                    } else {
+                        alert('اطلاعات ورود نادرست است.');
+                    }
+                    this.isLoading = false;
+                },
+                async loginWithoutCredentials() {
+                    this.isLoading = true;
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    this.loggedIn = true;
+                    this.currentUser = { name: 'کاربر مهمان', isAdmin: true };
+                    this.isLoading = false;
+                },
+                logout() {
+                    this.loggedIn = false;
+                    this.currentUser = null;
+                },
+                showSection(section) {
+                    this.activeSection = section;
+                    this.managementSection = '';
+                    this.withdrawSuccessMessage = false;
+                },
+                showManagementSection(section) {
+                    this.managementSection = section;
+                },
+                searchItems() {
+                    const uniqueNames = new Set();
+                    this.filteredItems = this.items.filter(item => {
+                        if (item.name.includes(this.newItem.name) && !uniqueNames.has(item.name)) {
+                            uniqueNames.add(item.name);
+                            return true;
+                        }
+                        return false;
+                    });
+                },
+                searchWithdrawItems() {
+                    const uniqueNames = new Set();
+                    this.filteredItems = this.items.filter(item => {
+                        if (item.name.includes(this.withdrawItem.name) && !uniqueNames.has(item.name)) {
+                            uniqueNames.add(item.name);
+                            return true;
+                        }
+                        return false;
+                    });
+                },
+                selectItem(item) {
+                    this.newItem.name = item.name;
+                    this.newItem.unit = item.unit;
+                    this.filteredItems = [];
+                },
+                async addItem() {
+                    if (!this.newItem.name || !this.newItem.quantity || !this.newItem.unit || !this.newItem.warehouse) {
+                        alert('لطفا تمام فیلدها را پر کنید');
+                        return;
+                    }
+                    const existingItem = this.items.find(i => 
+                        i.name === this.newItem.name && 
+                        i.warehouse === this.newItem.warehouse
+                    );
+                    if (existingItem) {
+                        existingItem.quantity += this.newItem.quantity;
+                    } else {
+                        this.items.push({
+                            id: Date.now(),
+                            ...this.newItem
+                        });
+                    }
+                    await updateData({ users: this.users, items: this.items, transactions: this.transactions });
+                    this.showSuccessMessage = true;
+                    setTimeout(() => this.showSuccessMessage = false, 3000);
+                    this.newItem = { name: '', quantity: 0, unit: '', warehouse: 'انبار داخل واحد' };
+                },
+                selectWithdrawItem(item) {
+                    this.withdrawItem.name = item.name;
+                    this.withdrawItem.unit = item.unit;
+                    this.withdrawItem.user = this.currentUser.name;
+                    this.availableWarehouses = this.items
+                        .filter(i => i.name === item.name && i.quantity > 0)
+                        .map(i => ({ name: i.warehouse, quantity: i.quantity }));
+                    this.filteredItems = [];
+                },
+                async submitWithdraw() {
+                    if (!this.withdrawItem.name || !this.withdrawItem.quantity || !this.withdrawItem.unit || !this.withdrawItem.user || !this.withdrawItem.location || !this.withdrawItem.warehouse) {
+                        alert('لطفا تمام فیلدها را پر کنید');
+                        return;
+                    }
+                    const item = this.items.find(i => 
+                        i.name === this.withdrawItem.name && 
+                        i.warehouse === this.withdrawItem.warehouse
+                    );
+                    if (item.quantity < this.withdrawItem.quantity) {
+                        alert('موجودی کافی نیست');
+                        return;
+                    }
+                    item.quantity -= this.withdrawItem.quantity;
+                    const now = new Date();
+                    this.transactions.unshift({
+                        item: this.withdrawItem.name,
+                        quantity: this.withdrawItem.quantity,
+                        user: this.withdrawItem.user,
+                        location: this.withdrawItem.location,
+                        date: now.toLocaleDateString('fa-IR', { year: 'numeric', month: '2-digit', day: '2-digit' }),
+                        time: now.toLocaleTimeString('fa-IR')
+                    });
+                    await updateData({ users: this.users, items: this.items, transactions: this.transactions });
+                    this.withdrawItem = { name: '', quantity: 0, unit: '', user: '', location: '', warehouse: '' };
+                    this.withdrawSuccessMessage = true;
+                    setTimeout(() => this.withdrawSuccessMessage = false, 4000);
+                },
+                withdrawFromStock(item) {
+                    this.withdrawItem.name = item.name;
+                    this.withdrawItem.unit = item.unit;
+                    this.withdrawItem.user = this.currentUser.name;
+                    this.availableWarehouses = this.items
+                        .filter(i => i.name === item.name)
+                        .map(i => ({ name: i.warehouse, quantity: i.quantity }));
+                    this.activeSection = 'withdraw';
+                },
+                confirmDeleteItem(item) {
+                    if (confirm(`آیا از حذف کالای "${item.name}" مطمئن هستید؟`)) {
+                        this.deleteItem(item);
+                    }
+                },
+                async deleteItem(item) {
+                    this.items = this.items.filter(i => i.name !== item.name);
+                    await updateData({ users: this.users, items: this.items, transactions: this.transactions });
+                },
+                confirmDeleteUser(userId) {
+                    if (confirm('آیا از حذف این کاربر مطمئن هستید؟')) {
+                        this.deleteUser(userId);
+                    }
+                },
+                async deleteUser(userId) {
+                    this.users = this.users.filter(u => u.id !== userId);
+                    await updateData({ users: this.users, items: this.items, transactions: this.transactions });
+                },
+                editUser(user) {
+                    this.editingUser = { ...user };
+                },
+                async updateUser(user) {
+                    const index = this.users.findIndex(u => u.id === user.id);
+                    if (index !== -1) {
+                        this.users[index] = user;
+                        await updateData({ users: this.users, items: this.items, transactions: this.transactions });
+                        this.editingUser = null;
+                    }
+                },
+                checkManagementPassword() {
+                    if (this.managementPassword === '1482') {
+                        this.managementAccess = true;
+                    } else {
+                        alert('رمز عبور اشتباه است!');
+                    }
+                },
+                async addUser() {
+                    if (!this.newUser.name || !this.newUser.username || !this.newUser.password) {
+                        alert('لطفا تمام فیلدها را پر کنید');
+                        return;
+                    }
+                    const existingUser = this.users.find(u => u.username === this.newUser.username);
+                    if (existingUser) {
+                        alert('این نام کاربری قبلاً استفاده شده است.');
+                        return;
+                    }
+                    this.users.push({
+                        id: Date.now(),
+                        ...this.newUser
+                    });
+                    await updateData({ users: this.users, items: this.items, transactions: this.transactions });
+                    this.newUser = { name: '', username: '', password: '', isAdmin: false };
+                },
+                async addBulkItems() {
+                    const itemsList = this.bulkItems.split('\n').filter(line => line.trim() !== '');
+                    itemsList.forEach(itemLine => {
+                        const [name, unit] = itemLine.split(',');
+                        if (name && unit) {
+                            this.items.push({
+                                id: Date.now(),
+                                name: name.trim(),
+                                quantity: 0,
+                                unit: unit.trim(),
+                                warehouse: 'انبار داخل واحد'
+                            });
+                        }
+                    });
+                    await updateData({ users: this.users, items: this.items, transactions: this.transactions });
+                    this.bulkItems = '';
+                }
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>
