@@ -6,7 +6,6 @@
     <title>مدیریت انبارهای واحد و ساختمان و تاسیسات</title>
     <link href="https://fonts.googleapis.com/css2?family=Vazir:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        /* استایل‌ها بدون تغییر باقی می‌مانند */
         :root {
             --primary-color: #2c3e50;
             --secondary-color: #3498db;
@@ -215,6 +214,12 @@
             margin-top: 10px;
             font-weight: bold;
         }
+        button.secondary {
+            background-color: var(--secondary-color);
+        }
+        button.success {
+            background-color: var(--success-color);
+        }
     </style>
 </head>
 <body>
@@ -234,7 +239,7 @@
                 <input type="password" id="password" v-model="password">
             </div>
             <button class="primary" @click="login">ورود</button>
-            <button class="primary" @click="loginWithoutCredentials" style="margin-top: 10px;">ورود بدون کاربری و رمز</button>
+           
         </div>
 
         <div v-if="loggedIn">
@@ -282,9 +287,16 @@
                         <option value="انبار قدیم کوچک">انبار قدیم کوچک</option>
                     </select>
                 </div>
+                <div class="form-group">
+                    <label for="itemDescription">توضیحات</label>
+                    <textarea id="itemDescription" v-model="newItem.description"></textarea>
+                </div>
                 <div class="flex-buttons">
-                    <button class="primary" @click="addItem">ذخیره</button>
+                    <button class="primary" @click="addItem" :disabled="isSubmitting">ذخیره</button>
                     <button class="gray" @click="activeSection = ''">لغو</button>
+                </div>
+                <div v-if="isSubmitting" class="overlay">
+                    <div class="loader"></div>
                 </div>
                 <div v-if="showSuccessMessage" class="success-message">کالا با موفقیت افزوده شد!</div>
             </div>
@@ -325,8 +337,11 @@
                     <input type="text" id="withdrawLocation" v-model="withdrawItem.location">
                 </div>
                 <div class="flex-buttons">
-                    <button class="primary" @click="submitWithdraw">ثبت</button>
+                    <button class="primary" @click="submitWithdraw" :disabled="isSubmitting">ثبت</button>
                     <button class="gray" @click="activeSection = ''">لغو</button>
+                </div>
+                <div v-if="isSubmitting" class="overlay">
+                    <div class="loader"></div>
                 </div>
                 <div v-if="withdrawSuccessMessage" class="success-message">برداشت کالا ثبت شد!</div>
             </div>
@@ -340,6 +355,7 @@
                             <th>واحد</th>
                             <th>مجموع موجودی</th>
                             <th>موجودی در انبارها</th>
+                            <th>توضیحات</th>
                             <th>عملیات</th>
                         </tr>
                     </thead>
@@ -355,13 +371,32 @@
                                     </li>
                                 </ul>
                             </td>
+                            <td>{{ item.description || '-' }}</td>
                             <td>
                                 <button class="primary" @click="withdrawFromStock(item)">برداشت</button>
+                                <button class="primary" @click="addStockItem(item)">افزودن</button>
+                                <button class="primary" @click="editStockItem(item)" v-if="currentUser.isAdmin">ویرایش</button>
                                 <button class="danger" @click="confirmDeleteItem(item)" v-if="currentUser.isAdmin">حذف</button>
                             </td>
                         </tr>
                     </tbody>
                 </table>
+            </div>
+
+            <div v-if="activeSection === 'editStockItem'">
+                <h3>ویرایش کالا</h3>
+                <div class="form-group">
+                    <label for="editStockItemName">نام کالا</label>
+                    <input type="text" id="editStockItemName" v-model="editingStockItem.name">
+                </div>
+                <div class="form-group">
+                    <label for="editStockItemUnit">واحد</label>
+                    <input type="text" id="editStockItemUnit" v-model="editingStockItem.unit">
+                </div>
+                <div class="flex-buttons">
+                    <button class="primary" @click="saveEditedStockItem">ذخیره</button>
+                    <button class="gray" @click="activeSection = ''">لغو</button>
+                </div>
             </div>
 
             <div v-if="activeSection === 'management'">
@@ -488,6 +523,10 @@
                 </div>
             </div>
         </div>
+
+        <div style="text-align: center; margin-top: 20px; color: var(--primary-color); font-size: 14px;">
+            طراحی و پیاده‌سازی توسط واحد ساختمان و تاسیسات صدا و سیمای خراسان جنوبی - اسفند ۱۴۰۳
+        </div>
     </div>
 
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
@@ -510,7 +549,7 @@
                     managementSection: '',
                     managementAccess: false,
                     managementPassword: '',
-                    newItem: { name: '', quantity: 0, unit: '', warehouse: 'انبار داخل واحد' },
+                    newItem: { name: '', quantity: 0, unit: '', warehouse: 'انبار داخل واحد', description: '' },
                     withdrawItem: { name: '', quantity: 0, unit: '', user: '', location: '', warehouse: '' },
                     filteredItems: [],
                     newUser: { name: '', username: '', password: '', isAdmin: false },
@@ -518,7 +557,9 @@
                     showSuccessMessage: false,
                     withdrawSuccessMessage: false,
                     availableWarehouses: [],
-                    editingUser: null
+                    editingUser: null,
+                    editingStockItem: null,
+                    isSubmitting: false
                 };
             },
             mounted() {
@@ -540,7 +581,8 @@
                                 name: item.name,
                                 unit: item.unit,
                                 totalQuantity: 0,
-                                warehouses: []
+                                warehouses: [],
+                                description: item.description || ''
                             };
                         }
                         const warehouseEntry = grouped[item.name].warehouses.find(wh => wh.name === item.warehouse);
@@ -557,7 +599,7 @@
                     Object.values(grouped).forEach(item => {
                         item.warehouses = item.warehouses.filter(warehouse => warehouse.quantity > 0);
                     });
-                    return Object.values(grouped);
+                    return Object.values(grouped).sort((a, b) => b.totalQuantity - a.totalQuantity);
                 }
             },
             methods: {
@@ -569,7 +611,7 @@
                         this.items = data.record.items || [];
                         this.transactions = data.record.transactions || [];
                     } catch (error) {
-                        console.error('Error fetching data:', error);
+                        console.error('خطا در دریافت داده‌ها:', error);
                     }
                     this.isLoading = false;
                 },
@@ -639,12 +681,14 @@
                         alert('لطفا تمام فیلدها را پر کنید');
                         return;
                     }
+                    this.isSubmitting = true;
                     const existingItem = this.items.find(i => 
                         i.name === this.newItem.name && 
                         i.warehouse === this.newItem.warehouse
                     );
                     if (existingItem) {
                         existingItem.quantity += this.newItem.quantity;
+                        existingItem.description = this.newItem.description || existingItem.description;
                     } else {
                         this.items.push({
                             id: Date.now(),
@@ -653,8 +697,11 @@
                     }
                     await updateData({ users: this.users, items: this.items, transactions: this.transactions });
                     this.showSuccessMessage = true;
-                    setTimeout(() => this.showSuccessMessage = false, 3000);
-                    this.newItem = { name: '', quantity: 0, unit: '', warehouse: 'انبار داخل واحد' };
+                    setTimeout(() => {
+                        this.showSuccessMessage = false;
+                        this.isSubmitting = false;
+                    }, 3000);
+                    this.newItem = { name: '', quantity: 0, unit: '', warehouse: 'انبار داخل واحد', description: '' };
                 },
                 selectWithdrawItem(item) {
                     this.withdrawItem.name = item.name;
@@ -678,6 +725,7 @@
                         alert('موجودی کافی نیست');
                         return;
                     }
+                    this.isSubmitting = true;
                     item.quantity -= this.withdrawItem.quantity;
                     const now = new Date();
                     this.transactions.unshift({
@@ -691,7 +739,10 @@
                     await updateData({ users: this.users, items: this.items, transactions: this.transactions });
                     this.withdrawItem = { name: '', quantity: 0, unit: '', user: '', location: '', warehouse: '' };
                     this.withdrawSuccessMessage = true;
-                    setTimeout(() => this.withdrawSuccessMessage = false, 4000);
+                    setTimeout(() => {
+                        this.withdrawSuccessMessage = false;
+                        this.isSubmitting = false;
+                    }, 4000);
                 },
                 withdrawFromStock(item) {
                     this.withdrawItem.name = item.name;
@@ -771,6 +822,26 @@
                     });
                     await updateData({ users: this.users, items: this.items, transactions: this.transactions });
                     this.bulkItems = '';
+                },
+                editStockItem(item) {
+                    this.editingStockItem = { name: item.name, unit: item.unit, warehouses: item.warehouses };
+                    this.activeSection = 'editStockItem';
+                },
+                async saveEditedStockItem() {
+                    this.items.forEach(item => {
+                        if (item.name === this.editingStockItem.name) {
+                            item.name = this.editingStockItem.name;
+                            item.unit = this.editingStockItem.unit;
+                        }
+                    });
+                    await updateData({ users: this.users, items: this.items, transactions: this.transactions });
+                    this.activeSection = 'stock';
+                    this.editingStockItem = null;
+                },
+                addStockItem(item) {
+                    this.newItem.name = item.name;
+                    this.newItem.unit = item.unit;
+                    this.activeSection = 'addItem';
                 }
             }
         }).mount('#app');
