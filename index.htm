@@ -21,11 +21,12 @@
         }
         body {
             background-color: var(--background);
-            padding: 20px;
             min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
+            margin: 0;
+            padding: 0;
         }
         .container {
             max-width: 1200px;
@@ -106,13 +107,35 @@
         }
         .header h2 {
             font-family: 'Vazir', sans-serif;
-            color: var(--primary-color);
+            color: var гер(0,0,0,0.1);
         }
-        .welcome-message {
-            font-size: 18px;
+        .header .welcome-message {
+            font-size: 16px;
             font-weight: bold;
             color: var(--primary-color);
-            margin-bottom: 20px;
+        }
+        .profile-menu {
+            position: absolute;
+            top: 40px;
+            right: 0;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            z-index: 1000;
+        }
+        .profile-menu button {
+            padding: 10px;
+            border: none;
+            background: none;
+            text-align: right;
+            cursor: pointer;
+            color: var(--primary-color);
+        }
+        .profile-menu button:hover {
+            background-color: #f0f0f0;
         }
         .dashboard-buttons {
             display: grid;
@@ -214,7 +237,7 @@
             margin-top: 10px;
             font-weight: bold;
         }
-        button.secondary {
+        button.primary {
             background-color: var(--secondary-color);
         }
         button.success {
@@ -229,7 +252,7 @@
         </div>
 
         <div v-if="!loggedIn" class="login-form">
-            <h2>ورود به سیستم</h2>
+            <h2> ورود به سیستم مدیریت انبار</h2>
             <div class="form-group">
                 <label for="username">نام کاربری</label>
                 <input type="text" id="username" v-model="username">
@@ -239,17 +262,20 @@
                 <input type="password" id="password" v-model="password">
             </div>
             <button class="primary" @click="login">ورود</button>
-           
         </div>
 
         <div v-if="loggedIn">
             <div class="header">
                 <h2>مدیریت انبارهای واحد ساختمان و تاسیسات</h2>
-                <button class="primary" @click="logout">خروج</button>
-            </div>
-
-            <div class="welcome-message">
-                خوش آمدید، {{ currentUser.name }}!
+                <div style="display: flex; align-items: center; gap: 10px; position: relative;">
+                    <span class="welcome-message">خوش آمدید، {{ currentUser.name }}!</span>
+                    <button class="gray" @click="toggleProfileMenu">ورود به پروفایل</button>
+                    <button class="gray" @click="logout">خروج</button>
+                    <div v-if="profileMenuOpen" class="profile-menu">
+                        <button @click="showProfileSection('changePassword')">تغییر رمز عبور</button>
+                        <button @click="showProfileSection('history')">تاریخچه فعالیت من</button>
+                    </div>
+                </div>
             </div>
 
             <div class="dashboard-buttons">
@@ -292,7 +318,7 @@
                     <textarea id="itemDescription" v-model="newItem.description"></textarea>
                 </div>
                 <div class="flex-buttons">
-                    <button class="primary" @click="addItem" :disabled="isSubmitting">ذخیره</button>
+                    <button class="gray" @click="addItem" :disabled="isSubmitting">ذخیره</button>
                     <button class="gray" @click="activeSection = ''">لغو</button>
                 </div>
                 <div v-if="isSubmitting" class="overlay">
@@ -337,7 +363,7 @@
                     <input type="text" id="withdrawLocation" v-model="withdrawItem.location">
                 </div>
                 <div class="flex-buttons">
-                    <button class="primary" @click="submitWithdraw" :disabled="isSubmitting">ثبت</button>
+                    <button class="gray" @click="submitWithdraw" :disabled="isSubmitting">ثبت</button>
                     <button class="gray" @click="activeSection = ''">لغو</button>
                 </div>
                 <div v-if="isSubmitting" class="overlay">
@@ -348,6 +374,10 @@
 
             <div v-if="activeSection === 'stock'">
                 <h3>موجودی انبار</h3>
+                <div class="form-group">
+                    <label for="searchStock">جستجوی کالا</label>
+                    <input type="text" id="searchStock" v-model="searchQuery" placeholder="نام کالا را وارد کنید">
+                </div>
                 <table>
                     <thead>
                         <tr>
@@ -360,7 +390,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr v-for="(item, index) in groupedItems" :key="index">
+                        <tr v-for="(item, index) in filteredGroupedItems" :key="index">
                             <td>{{ item.name }}</td>
                             <td>{{ item.unit }}</td>
                             <td>{{ item.totalQuantity }}</td>
@@ -373,10 +403,10 @@
                             </td>
                             <td>{{ item.description || '-' }}</td>
                             <td>
-                                <button class="primary" @click="withdrawFromStock(item)">برداشت</button>
-                                <button class="primary" @click="addStockItem(item)">افزودن</button>
-                                <button class="primary" @click="editStockItem(item)" v-if="currentUser.isAdmin">ویرایش</button>
-                                <button class="danger" @click="confirmDeleteItem(item)" v-if="currentUser.isAdmin">حذف</button>
+                                <button class="gray" @click="withdrawFromStock(item)">برداشت</button>
+                                <button class="gray" @click="addStockItem(item)">افزودن</button>
+                                <button class="gray" @click="editStockItem(item)" v-if="currentUser.isAdmin">ویرایش</button>
+                                <button class="gray" @click="confirmDeleteItem(item)" v-if="currentUser.isAdmin">حذف</button>
                             </td>
                         </tr>
                     </tbody>
@@ -394,8 +424,48 @@
                     <input type="text" id="editStockItemUnit" v-model="editingStockItem.unit">
                 </div>
                 <div class="flex-buttons">
-                    <button class="primary" @click="saveEditedStockItem">ذخیره</button>
+                    <button class="gray" @click="saveEditedStockItem">ذخیره</button>
                     <button class="gray" @click="activeSection = ''">لغو</button>
+                </div>
+            </div>
+
+            <div v-if="activeSection === 'profile'">
+                <div v-if="profileSection === 'changePassword'" class="form-group" style="margin-top: 20px;">
+                    <h3>تغییر رمز عبور</h3>
+                    <div class="form-group">
+                        <label for="newPassword">رمز عبور جدید</label>
+                        <input type="password" id="newPassword" v-model="newPassword">
+                    </div>
+                    <div class="flex-buttons">
+                        <button class="gray" @click="changePassword">ذخیره</button>
+                        <button class="gray" @click="activeSection = ''">بازگشت</button>
+                    </div>
+                </div>
+
+                <div v-if="profileSection === 'history'" style="margin-top: 20px;">
+                    <h3>تاریخچه فعالیت‌ها</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>تاریخ</th>
+                                <th>ساعت</th>
+                                <th>نوع عملیات</th>
+                                <th>نام کالا</th>
+                                <th>مقدار</th>
+                                <th>انبار</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="entry in userHistory" :key="entry.date + entry.time + entry.item">
+                                <td>{{ entry.date }}</td>
+                                <td>{{ entry.time }}</td>
+                                <td>{{ entry.type }}</td>
+                                <td>{{ entry.item }}</td>
+                                <td>{{ entry.quantity }}</td>
+                                <td>{{ entry.warehouse }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
 
@@ -406,7 +476,7 @@
                     <input type="password" id="managementPassword" v-model="managementPassword">
                 </div>
                 <div class="flex-buttons">
-                    <button class="primary" @click="checkManagementPassword">تایید</button>
+                    <button class="gray" @click="checkManagementPassword">تایید</button>
                     <button class="gray" @click="activeSection = ''">لغو</button>
                 </div>
 
@@ -417,26 +487,30 @@
                 </div>
 
                 <div v-if="managementSection === 'reports'">
-                    <h4>گزارش برداشت‌ها</h4>
+                    <h4>گزارش عملیات</h4>
                     <table>
                         <thead>
                             <tr>
                                 <th>تاریخ</th>
                                 <th>ساعت</th>
+                                <th>نوع عملیات</th>
                                 <th>نام کالا</th>
                                 <th>مقدار</th>
-                                <th>فرد برداشت کننده</th>
+                                <th>فرد انجام‌دهنده</th>
+                                <th>انبار</th>
                                 <th>محل استفاده</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr v-for="transaction in sortedTransactions" :key="transaction.location">
+                            <tr v-for="transaction in allTransactions" :key="transaction.date + transaction.time + transaction.item">
                                 <td>{{ transaction.date }}</td>
                                 <td>{{ transaction.time }}</td>
+                                <td>{{ transaction.type }}</td>
                                 <td>{{ transaction.item }}</td>
                                 <td>{{ transaction.quantity }}</td>
                                 <td>{{ transaction.user }}</td>
-                                <td>{{ transaction.location }}</td>
+                                <td>{{ transaction.warehouse || '-' }}</td>
+                                <td>{{ transaction.location || '-' }}</td>
                             </tr>
                         </tbody>
                     </table>
@@ -459,7 +533,7 @@
                                 <td>{{ user.name }}</td>
                                 <td>{{ user.isAdmin ? 'ادمین' : 'کاربر عادی' }}</td>
                                 <td>
-                                    <button class="primary" @click="editUser(user)">ویرایش</button>
+                                    <button class="gray" @click="editUser(user)">ویرایش</button>
                                     <button class="danger" @click="confirmDeleteUser(user.id)">حذف</button>
                                 </td>
                             </tr>
@@ -487,7 +561,7 @@
                                 <option :value="false">کاربر عادی</option>
                             </select>
                         </div>
-                        <button class="primary" @click="updateUser(editingUser)">ذخیره تغییرات</button>
+                        <button class="gray" @click="updateUser(editingUser)">ذخیره تغییرات</button>
                         <button class="gray" @click="editingUser = null">لغو</button>
                     </div>
 
@@ -511,7 +585,7 @@
                             <option :value="false">کاربر عادی</option>
                         </select>
                     </div>
-                    <button class="primary" @click="addUser">افزودن کاربر</button>
+                    <button class="gray" @click="addUser">افزودن کاربر</button>
                 </div>
 
                 <div v-if="managementSection === 'bulkItems'">
@@ -519,7 +593,7 @@
                     <div class="form-group">
                         <textarea placeholder="لیست کالاها (فرمت: نام کالا,واحد)" v-model="bulkItems"></textarea>
                     </div>
-                    <button class="primary" @click="addBulkItems">ذخیره</button>
+                    <button class="gray" @click="addBulkItems">ذخیره</button>
                 </div>
             </div>
         </div>
@@ -529,7 +603,7 @@
         </div>
     </div>
 
-    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://unpkg.com/vue@3.4.21/dist/vue.global.js"></script>
     <script src="script.js"></script>
     <script>
         const { createApp } = Vue;
@@ -559,19 +633,46 @@
                     availableWarehouses: [],
                     editingUser: null,
                     editingStockItem: null,
-                    isSubmitting: false
+                    isSubmitting: false,
+                    newPassword: '',
+                    profileMenuOpen: false,
+                    profileSection: '',
+                    searchQuery: '',
+                    lastActivityTime: null,
+                    inactivityTimeout: null
                 };
             },
             mounted() {
                 this.initializeData();
+                this.startInactivityTimer();
+                window.addEventListener('mousemove', this.updateLastActivity);
+                window.addEventListener('keydown', this.updateLastActivity);
+                window.addEventListener('click', this.updateLastActivity);
+            },
+            beforeUnmount() {
+                window.removeEventListener('mousemove', this.updateLastActivity);
+                window.removeEventListener('keydown', this.updateLastActivity);
+                window.removeEventListener('click', this.updateLastActivity);
+                clearInterval(this.inactivityTimeout);
             },
             computed: {
-                sortedTransactions() {
-                    return this.transactions.slice().sort((a, b) => {
-                        const dateA = new Date(`${a.date} ${a.time}`);
-                        const dateB = new Date(`${b.date} ${b.time}`);
-                        return dateB - dateA;
-                    });
+                allTransactions() {
+                    return this.transactions
+                        .map(t => ({
+                            date: t.date,
+                            time: t.time,
+                            type: t.type || 'برداشت',
+                            item: t.item,
+                            quantity: t.quantity,
+                            user: t.user,
+                            warehouse: t.warehouse || '-',
+                            location: t.location || '-'
+                        }))
+                        .sort((a, b) => {
+                            const dateA = new Date(`${a.date} ${a.time}`);
+                            const dateB = new Date(`${b.date} ${b.time}`);
+                            return dateB - dateA;
+                        });
                 },
                 groupedItems() {
                     const grouped = {};
@@ -600,6 +701,25 @@
                         item.warehouses = item.warehouses.filter(warehouse => warehouse.quantity > 0);
                     });
                     return Object.values(grouped).sort((a, b) => b.totalQuantity - a.totalQuantity);
+                },
+                filteredGroupedItems() {
+                    if (!this.searchQuery) return this.groupedItems;
+                    return this.groupedItems.filter(item => 
+                        item.name.toLowerCase().includes(this.searchQuery.toLowerCase())
+                    );
+                },
+                userHistory() {
+                    return this.transactions
+                        .filter(t => t.user === this.currentUser.name)
+                        .map(t => ({
+                            date: t.date,
+                            time: t.time,
+                            type: t.type || 'برداشت',
+                            item: t.item,
+                            quantity: t.quantity,
+                            warehouse: t.warehouse || '-'
+                        }))
+                        .sort((a, b) => new Date(`${b.date} ${b.time}`) - new Date(`${a.date} ${a.time}`));
                 }
             },
             methods: {
@@ -632,16 +752,24 @@
                     }
                     this.isLoading = false;
                 },
-                async loginWithoutCredentials() {
-                    this.isLoading = true;
-                    await new Promise(resolve => setTimeout(resolve, 1000));
-                    this.loggedIn = true;
-                    this.currentUser = { name: 'کاربر مهمان', isAdmin: true };
-                    this.isLoading = false;
-                },
                 logout() {
                     this.loggedIn = false;
                     this.currentUser = null;
+                    clearInterval(this.inactivityTimeout);
+                },
+                startInactivityTimer() {
+                    this.lastActivityTime = Date.now();
+                    this.inactivityTimeout = setInterval(() => {
+                        const now = Date.now();
+                        if (this.loggedIn && (now - this.lastActivityTime) >= 600000) {
+                            this.logout();
+                            alert('به دلیل عدم فعالیت به مدت 10 دقیقه، از سیستم خارج شدید.');
+                            clearInterval(this.inactivityTimeout);
+                        }
+                    }, 1000);
+                },
+                updateLastActivity() {
+                    this.lastActivityTime = Date.now();
                 },
                 showSection(section) {
                     this.activeSection = section;
@@ -650,6 +778,14 @@
                 },
                 showManagementSection(section) {
                     this.managementSection = section;
+                },
+                toggleProfileMenu() {
+                    this.profileMenuOpen = !this.profileMenuOpen;
+                },
+                showProfileSection(section) {
+                    this.activeSection = 'profile';
+                    this.profileSection = section;
+                    this.profileMenuOpen = false;
                 },
                 searchItems() {
                     const uniqueNames = new Set();
@@ -686,13 +822,40 @@
                         i.name === this.newItem.name && 
                         i.warehouse === this.newItem.warehouse
                     );
+                    const now = new Date();
+                    const quantityToAdd = parseInt(this.newItem.quantity);
                     if (existingItem) {
-                        existingItem.quantity += this.newItem.quantity;
+                        existingItem.quantity += quantityToAdd;
                         existingItem.description = this.newItem.description || existingItem.description;
+                        this.transactions.unshift({
+                            item: this.newItem.name,
+                            quantity: quantityToAdd,
+                            user: this.currentUser.name,
+                            location: '-',
+                            date: now.toLocaleDateString('fa-IR'),
+                            time: now.toLocaleTimeString('fa-IR'),
+                            warehouse: this.newItem.warehouse,
+                            type: 'افزودن'
+                        });
                     } else {
                         this.items.push({
                             id: Date.now(),
-                            ...this.newItem
+                            ...this.newItem,
+                            quantity: quantityToAdd,
+                            initialQuantity: quantityToAdd,
+                            user: this.currentUser.name,
+                            date: now.toLocaleDateString('fa-IR'),
+                            time: now.toLocaleTimeString('fa-IR')
+                        });
+                        this.transactions.unshift({
+                            item: this.newItem.name,
+                            quantity: quantityToAdd,
+                            user: this.currentUser.name,
+                            location: '-',
+                            date: now.toLocaleDateString('fa-IR'),
+                            time: now.toLocaleTimeString('fa-IR'),
+                            warehouse: this.newItem.warehouse,
+                            type: 'افزودن'
                         });
                     }
                     await updateData({ users: this.users, items: this.items, transactions: this.transactions });
@@ -701,7 +864,7 @@
                         this.showSuccessMessage = false;
                         this.isSubmitting = false;
                     }, 3000);
-                    this.newItem = { name: '', quantity: 0, unit: '', warehouse: 'انبار داخل واحد', description: '' };
+                    this.newItem = { name: '', quantity: '', unit: '', warehouse: 'انبار داخل واحد', description: '' };
                 },
                 selectWithdrawItem(item) {
                     this.withdrawItem.name = item.name;
@@ -721,23 +884,25 @@
                         i.name === this.withdrawItem.name && 
                         i.warehouse === this.withdrawItem.warehouse
                     );
-                    if (item.quantity < this.withdrawItem.quantity) {
+                    if (item.quantity < parseInt(this.withdrawItem.quantity)) {
                         alert('موجودی کافی نیست');
                         return;
                     }
                     this.isSubmitting = true;
-                    item.quantity -= this.withdrawItem.quantity;
+                    item.quantity -= parseInt(this.withdrawItem.quantity);
                     const now = new Date();
                     this.transactions.unshift({
                         item: this.withdrawItem.name,
-                        quantity: this.withdrawItem.quantity,
+                        quantity: parseInt(this.withdrawItem.quantity),
                         user: this.withdrawItem.user,
                         location: this.withdrawItem.location,
-                        date: now.toLocaleDateString('fa-IR', { year: 'numeric', month: '2-digit', day: '2-digit' }),
-                        time: now.toLocaleTimeString('fa-IR')
+                        date: now.toLocaleDateString('fa-IR'),
+                        time: now.toLocaleTimeString('fa-IR'),
+                        warehouse: this.withdrawItem.warehouse,
+                        type: 'برداشت'
                     });
                     await updateData({ users: this.users, items: this.items, transactions: this.transactions });
-                    this.withdrawItem = { name: '', quantity: 0, unit: '', user: '', location: '', warehouse: '' };
+                    this.withdrawItem = { name: '', quantity: '', unit: '', user: '', location: '', warehouse: '' };
                     this.withdrawSuccessMessage = true;
                     setTimeout(() => {
                         this.withdrawSuccessMessage = false;
@@ -783,7 +948,7 @@
                     }
                 },
                 checkManagementPassword() {
-                    if (this.managementPassword === '1482') {
+                    if (this.managementPassword === '1403') {
                         this.managementAccess = true;
                     } else {
                         alert('رمز عبور اشتباه است!');
@@ -824,12 +989,18 @@
                     this.bulkItems = '';
                 },
                 editStockItem(item) {
-                    this.editingStockItem = { name: item.name, unit: item.unit, warehouses: item.warehouses };
+                    this.editingStockItem = { 
+                        name: item.name, 
+                        unit: item.unit, 
+                        warehouses: item.warehouses,
+                        originalName: item.name
+                    };
                     this.activeSection = 'editStockItem';
                 },
                 async saveEditedStockItem() {
+                    const oldName = this.editingStockItem.originalName || this.editingStockItem.name;
                     this.items.forEach(item => {
-                        if (item.name === this.editingStockItem.name) {
+                        if (item.name === oldName) {
                             item.name = this.editingStockItem.name;
                             item.unit = this.editingStockItem.unit;
                         }
@@ -842,6 +1013,21 @@
                     this.newItem.name = item.name;
                     this.newItem.unit = item.unit;
                     this.activeSection = 'addItem';
+                },
+                changePassword() {
+                    if (!this.newPassword) {
+                        alert('لطفاً رمز عبور جدید را وارد کنید');
+                        return;
+                    }
+                    this.currentUser.password = this.newPassword;
+                    const userIndex = this.users.findIndex(u => u.id === this.currentUser.id);
+                    if (userIndex !== -1) {
+                        this.users[userIndex].password = this.newPassword;
+                        updateData({ users: this.users, items: this.items, transactions: this.transactions });
+                        alert('رمز عبور با موفقیت تغییر کرد');
+                        this.newPassword = '';
+                        this.activeSection = '';
+                    }
                 }
             }
         }).mount('#app');
