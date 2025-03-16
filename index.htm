@@ -15,7 +15,7 @@
         }
         * {
             box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Segoe UI', tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
             padding: 0;
         }
@@ -107,7 +107,7 @@
         }
         .header h2 {
             font-family: 'Vazir', sans-serif;
-            color: var гер(0,0,0,0.1);
+            color: var(--primary-color);
         }
         .header .welcome-message {
             font-size: 16px;
@@ -179,6 +179,11 @@
             margin-bottom: 5px;
             font-weight: bold;
         }
+        .form-group label.required::before {
+            content: '*';
+            color: red;
+            margin-left: 5px;
+        }
         .form-group input, .form-group select, .form-group textarea {
             width: 100%;
             padding: 8px;
@@ -236,6 +241,15 @@
             color: var(--success-color);
             margin-top: 10px;
             font-weight: bold;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.2);
+            z-index: 2000;
         }
         button.primary {
             background-color: var(--secondary-color);
@@ -288,7 +302,7 @@
             <div v-if="activeSection === 'addItem'">
                 <h3>افزودن کالا به انبار</h3>
                 <div class="form-group">
-                    <label for="itemName">نام کالا</label>
+                    <label for="itemName" class="required">نام کالا</label>
                     <input type="text" id="itemName" v-model="newItem.name" @input="searchItems">
                     <ul v-if="filteredItems.length">
                         <li v-for="item in filteredItems" :key="item.id" @click="selectItem(item)">
@@ -297,15 +311,15 @@
                     </ul>
                 </div>
                 <div class="form-group">
-                    <label for="itemQuantity">مقدار/تعداد</label>
+                    <label for="itemQuantity" class="required">مقدار/تعداد</label>
                     <input type="number" id="itemQuantity" v-model="newItem.quantity">
                 </div>
                 <div class="form-group">
-                    <label for="itemUnit">واحد</label>
+                    <label for="itemUnit" class="required">واحد</label>
                     <input type="text" id="itemUnit" v-model="newItem.unit">
                 </div>
                 <div class="form-group">
-                    <label for="itemWarehouse">انبار</label>
+                    <label for="itemWarehouse" class="required">انبار</label>
                     <select id="itemWarehouse" v-model="newItem.warehouse">
                         <option value="انبار داخل واحد">انبار داخل واحد</option>
                         <option value="انبار کانکس">انبار کانکس</option>
@@ -324,13 +338,13 @@
                 <div v-if="isSubmitting" class="overlay">
                     <div class="loader"></div>
                 </div>
-                <div v-if="showSuccessMessage" class="success-message">کالا با موفقیت افزوده شد!</div>
+                <div v-if="showSuccessMessage" class="success-message">ثبت با موفقیت انجام شد!</div>
             </div>
 
             <div v-if="activeSection === 'withdraw'">
                 <h3>برداشت از انبار</h3>
                 <div class="form-group">
-                    <label for="withdrawItemName">نام کالا</label>
+                    <label for="withdrawItemName" class="required">نام کالا</label>
                     <input type="text" id="withdrawItemName" v-model="withdrawItem.name" @input="searchWithdrawItems">
                     <ul v-if="filteredItems.length">
                         <li v-for="item in filteredItems" :key="item.id" @click="selectWithdrawItem(item)">
@@ -339,19 +353,15 @@
                     </ul>
                 </div>
                 <div class="form-group">
-                    <label for="withdrawQuantity">مقدار</label>
+                    <label for="withdrawQuantity" class="required">مقدار</label>
                     <input type="number" id="withdrawQuantity" v-model="withdrawItem.quantity">
                 </div>
                 <div class="form-group">
-                    <label for="withdrawUnit">واحد</label>
+                    <label for="withdrawUnit" class="required">واحد</label>
                     <input type="text" id="withdrawUnit" v-model="withdrawItem.unit" readonly>
                 </div>
                 <div class="form-group">
-                    <label for="withdrawUser">نام فرد برداشت کننده</label>
-                    <input type="text" id="withdrawUser" v-model="withdrawItem.user" :value="currentUser.name">
-                </div>
-                <div class="form-group">
-                    <label for="withdrawWarehouse">انبار</label>
+                    <label for="withdrawWarehouse" class="required">انبار</label>
                     <select id="withdrawWarehouse" v-model="withdrawItem.warehouse">
                         <option v-for="warehouse in availableWarehouses" :key="warehouse.name" :value="warehouse.name">
                             {{ warehouse.name }} ({{ warehouse.quantity }})
@@ -359,7 +369,7 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="withdrawLocation">محل استفاده</label>
+                    <label for="withdrawLocation" class="required">محل استفاده</label>
                     <input type="text" id="withdrawLocation" v-model="withdrawItem.location">
                 </div>
                 <div class="flex-buttons">
@@ -369,7 +379,7 @@
                 <div v-if="isSubmitting" class="overlay">
                     <div class="loader"></div>
                 </div>
-                <div v-if="withdrawSuccessMessage" class="success-message">برداشت کالا ثبت شد!</div>
+                <div v-if="withdrawSuccessMessage" class="success-message">ثبت با موفقیت انجام شد!</div>
             </div>
 
             <div v-if="activeSection === 'stock'">
@@ -624,7 +634,7 @@
                     managementAccess: false,
                     managementPassword: '',
                     newItem: { name: '', quantity: '', unit: '', warehouse: 'انبار داخل واحد', description: '' },
-                    withdrawItem: { name: '', quantity: '', unit: '', user: '', location: '', warehouse: '' },
+                    withdrawItem: { name: '', quantity: '', unit: '', location: '', warehouse: '' },
                     filteredItems: [],
                     newUser: { name: '', username: '', password: '', isAdmin: false },
                     bulkItems: '',
@@ -788,24 +798,22 @@
                     this.profileMenuOpen = false;
                 },
                 searchItems() {
-                    const uniqueNames = new Set();
-                    this.filteredItems = this.items.filter(item => {
-                        if (item.name.includes(this.newItem.name) && !uniqueNames.has(item.name)) {
-                            uniqueNames.add(item.name);
-                            return true;
-                        }
-                        return false;
-                    });
+                    this.filteredItems = this.groupedItems
+                        .filter(item => item.name.toLowerCase().includes(this.newItem.name.toLowerCase()))
+                        .map(item => ({
+                            id: item.name,
+                            name: item.name,
+                            unit: item.unit
+                        }));
                 },
                 searchWithdrawItems() {
-                    const uniqueNames = new Set();
-                    this.filteredItems = this.items.filter(item => {
-                        if (item.name.includes(this.withdrawItem.name) && !uniqueNames.has(item.name)) {
-                            uniqueNames.add(item.name);
-                            return true;
-                        }
-                        return false;
-                    });
+                    this.filteredItems = this.groupedItems
+                        .filter(item => item.name.toLowerCase().includes(this.withdrawItem.name.toLowerCase()))
+                        .map(item => ({
+                            id: item.name,
+                            name: item.name,
+                            unit: item.unit
+                        }));
                 },
                 selectItem(item) {
                     this.newItem.name = item.name;
@@ -814,7 +822,7 @@
                 },
                 async addItem() {
                     if (!this.newItem.name || !this.newItem.quantity || !this.newItem.unit || !this.newItem.warehouse) {
-                        alert('لطفا تمام فیلدها را پر کنید');
+                        alert('لطفا تمام فیلدهای اجباری را پر کنید');
                         return;
                     }
                     this.isSubmitting = true;
@@ -869,15 +877,14 @@
                 selectWithdrawItem(item) {
                     this.withdrawItem.name = item.name;
                     this.withdrawItem.unit = item.unit;
-                    this.withdrawItem.user = this.currentUser.name;
                     this.availableWarehouses = this.items
                         .filter(i => i.name === item.name && i.quantity > 0)
                         .map(i => ({ name: i.warehouse, quantity: i.quantity }));
                     this.filteredItems = [];
                 },
                 async submitWithdraw() {
-                    if (!this.withdrawItem.name || !this.withdrawItem.quantity || !this.withdrawItem.unit || !this.withdrawItem.user || !this.withdrawItem.location || !this.withdrawItem.warehouse) {
-                        alert('لطفا تمام فیلدها را پر کنید');
+                    if (!this.withdrawItem.name || !this.withdrawItem.quantity || !this.withdrawItem.unit || !this.withdrawItem.warehouse || !this.withdrawItem.location) {
+                        alert('لطفا تمام فیلدهای اجباری را پر کنید');
                         return;
                     }
                     const item = this.items.find(i => 
@@ -894,7 +901,7 @@
                     this.transactions.unshift({
                         item: this.withdrawItem.name,
                         quantity: parseInt(this.withdrawItem.quantity),
-                        user: this.withdrawItem.user,
+                        user: this.currentUser.name,
                         location: this.withdrawItem.location,
                         date: now.toLocaleDateString('fa-IR'),
                         time: now.toLocaleTimeString('fa-IR'),
@@ -902,17 +909,16 @@
                         type: 'برداشت'
                     });
                     await updateData({ users: this.users, items: this.items, transactions: this.transactions });
-                    this.withdrawItem = { name: '', quantity: '', unit: '', user: '', location: '', warehouse: '' };
+                    this.withdrawItem = { name: '', quantity: '', unit: '', location: '', warehouse: '' };
                     this.withdrawSuccessMessage = true;
                     setTimeout(() => {
                         this.withdrawSuccessMessage = false;
                         this.isSubmitting = false;
-                    }, 4000);
+                    }, 3000);
                 },
                 withdrawFromStock(item) {
                     this.withdrawItem.name = item.name;
                     this.withdrawItem.unit = item.unit;
-                    this.withdrawItem.user = this.currentUser.name;
                     this.availableWarehouses = this.items
                         .filter(i => i.name === item.name)
                         .map(i => ({ name: i.warehouse, quantity: i.quantity }));
@@ -1032,5 +1038,5 @@
             }
         }).mount('#app');
     </script>
-</body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'921264550cb3b07a',t:'MTc0MjEwODYxOS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
