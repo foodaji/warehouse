@@ -12,6 +12,7 @@
             --danger-color: #e74c3c;
             --success-color: #27ae60;
             --background: #f8f9fa;
+            --highlight-color: #f39c12;
         }
 
         * {
@@ -28,6 +29,7 @@
             justify-content: center;
             align-items: center;
             padding: 10px;
+            position: relative;
         }
 
         .container {
@@ -245,11 +247,14 @@
             flex-wrap: wrap;
             gap: 10px;
             margin-top: 15px;
+            justify-content: center;
         }
 
         .flex-buttons button {
-            flex: 1;
+            flex: 0 1 auto;
             min-width: 100px;
+            padding: 8px 16px;
+            font-size: 0.9rem;
         }
 
         table {
@@ -329,7 +334,134 @@
             background-color: var(--success-color);
         }
 
-        /* استایل‌های ریسپانسیو با Media Queries */
+        .score-button {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            padding: 10px 20px;
+            background-color: var(--highlight-color);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            transition: transform 0.3s;
+        }
+
+        .score-button:hover {
+            transform: scale(1.05);
+        }
+
+        .score-menu {
+            position: fixed;
+            top: 60px;
+            left: 10px;
+            width: 300px;
+            max-height: 400px;
+            overflow-y: auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            padding: 15px;
+            animation: slideIn 0.3s ease-in-out;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .score-menu .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: var(--danger-color);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            line-height: 20px;
+        }
+
+        .score-menu h4 {
+            margin-bottom: 10px;
+            color: var(--primary-color);
+            font-family: 'Vazir', sans-serif;
+        }
+
+        .score-menu p {
+            font-size: 0.8rem;
+            color: #666;
+            margin-bottom: 15px;
+        }
+
+        .score-menu table {
+            width: 100%;
+            font-size: 0.85rem;
+        }
+
+        .score-menu th, .score-menu td {
+            padding: 8px;
+        }
+
+        /* استایل تیک در موجودی */
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+            font-size: 0.9rem;
+        }
+
+        .checkbox-container input[type="checkbox"] {
+            display: none;
+        }
+
+        .checkbox-container label {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            color: var(--primary-color);
+        }
+
+        .checkbox-container .checkmark {
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--primary-color);
+            border-radius: 4px;
+            margin-left: 8px;
+            position: relative;
+            transition: background-color 0.3s;
+        }
+
+        .checkbox-container input[type="checkbox"]:checked + .checkmark {
+            background-color: var(--success-color);
+            border-color: var(--success-color);
+        }
+
+        .checkbox-container .checkmark:after {
+            content: '';
+            position: absolute;
+            display: none;
+            left: 6px;
+            top: 2px;
+            width: 5px;
+            height: 10px;
+            border: solid white;
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg);
+        }
+
+        .checkbox-container input[type="checkbox"]:checked + .checkmark:after {
+            display: block;
+        }
+
         @media (max-width: 768px) {
             .header {
                 flex-direction: column;
@@ -371,6 +503,10 @@
 
             .profile-menu button {
                 font-size: 0.85rem;
+            }
+
+            .score-menu {
+                width: 250px;
             }
         }
 
@@ -434,6 +570,16 @@
                 font-size: 0.9rem;
                 padding: 10px;
             }
+
+            .score-button {
+                padding: 8px 15px;
+                font-size: 0.9rem;
+            }
+
+            .score-menu {
+                width: 200px;
+                top: 50px;
+            }
         }
     </style>
 </head>
@@ -457,6 +603,27 @@
         </div>
 
         <div v-if="loggedIn">
+            <button class="score-button" @click="toggleScoreMenu">امتیاز کاربران</button>
+            <div v-if="scoreMenuOpen" class="score-menu">
+                <button class="close-btn" @click="toggleScoreMenu">×</button>
+                <h4>امتیاز کاربران</h4>
+                <p>امتیازات بر اساس فعالیت کاربران در سامانه تعیین می‌شود.</p>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>نام کاربر</th>
+                            <th>امتیاز</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="user in filteredUsers" :key="user.id">
+                            <td>{{ user.name }}</td>
+                            <td>{{ user.score }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
             <div class="header">
                 <h2>مدیریت انبارهای واحد ساختمان و تاسیسات</h2>
                 <div style="display: flex; align-items: center; gap: 10px; position: relative;">
@@ -466,7 +633,6 @@
                     <div v-if="profileMenuOpen" class="profile-menu">
                         <button @click="showProfileSection('changePassword')">تغییر رمز عبور</button>
                         <button @click="showProfileSection('history')">تاریخچه فعالیت من</button>
-                        <button @click="showProfileSection('ranking')">رتبه‌بندی کاربران</button>
                     </div>
                 </div>
             </div>
@@ -527,7 +693,7 @@
                     <input type="text" id="withdrawItemName" v-model="withdrawItem.name" @input="searchWithdrawItems">
                     <ul v-if="filteredItems.length">
                         <li v-for="item in filteredItems" :key="item.id" @click="selectWithdrawItem(item)">
-                            {{ item.name }} ({{ item.unit }})
+                            {{ item.name }} ({{ item.unit }}) {{ item.description ? '- ' + item.description : '' }}
                         </li>
                     </ul>
                 </div>
@@ -543,7 +709,7 @@
                     <label for="withdrawWarehouse" class="required">انبار</label>
                     <select id="withdrawWarehouse" v-model="withdrawItem.warehouse">
                         <option v-for="warehouse in availableWarehouses" :key="warehouse.name" :value="warehouse.name">
-                            {{ warehouse.name }} ({{ warehouse.quantity }})
+                            {{ warehouse.name }} ({{ warehouse.quantity }}) {{ warehouse.description ? '- ' + warehouse.description : '' }}
                         </option>
                     </select>
                 </div>
@@ -567,19 +733,26 @@
                     <label for="searchStock">جستجوی کالا</label>
                     <input type="text" id="searchStock" v-model="searchQuery" placeholder="نام کالا را وارد کنید">
                 </div>
+                <div class="checkbox-container">
+                    <label>
+                        <input type="checkbox" v-model="hideZeroStock">
+                        <span class="checkmark"></span>
+                        مخفی کردن کالاهای با موجودی صفر
+                    </label>
+                </div>
                 <table>
                     <thead>
                         <tr>
                             <th>نام کالا</th>
                             <th>واحد</th>
-                            <th>مجموع موجودی</th>
-                            <th>موجودی در انبارها</th>
+                            <th>مقدار</th>
+                            <th>انبار</th>
                             <th>توضیحات</th>
                             <th>عملیات</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr v-for="(item, index) in filteredGroupedItems" :key="index">
+                        <tr v-for="item in filteredGroupedItems" :key="item.key">
                             <td>{{ item.name }}</td>
                             <td>{{ item.unit }}</td>
                             <td>{{ item.totalQuantity }}</td>
@@ -611,6 +784,10 @@
                 <div class="form-group">
                     <label for="editStockItemUnit">واحد</label>
                     <input type="text" id="editStockItemUnit" v-model="editingStockItem.unit">
+                </div>
+                <div class="form-group">
+                    <label for="editStockItemDescription">توضیحات</label>
+                    <textarea id="editStockItemDescription" v-model="editingStockItem.description"></textarea>
                 </div>
                 <div class="flex-buttons">
                     <button class="gray" @click="saveEditedStockItem">ذخیره</button>
@@ -652,28 +829,6 @@
                                 <td>{{ entry.item }}</td>
                                 <td>{{ entry.quantity }}</td>
                                 <td>{{ entry.warehouse }}</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-
-                <div v-if="profileSection === 'ranking'" style="margin-top: 20px;">
-                    <h3>رتبه‌بندی کاربران</h3>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>رتبه</th>
-                                <th>نام کاربر</th>
-                                <th>تعداد مراجعات</th>
-                                <th>مدت زمان فعالیت (دقیقه)</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr v-for="(user, index) in rankedUsers" :key="user.id">
-                                <td>{{ index + 1 }}</td>
-                                <td>{{ user.name }}</td>
-                                <td>{{ user.loginCount }}</td>
-                                <td>{{ Math.round(user.totalActivityTime / 60000) }}</td>
                             </tr>
                         </tbody>
                     </table>
@@ -772,8 +927,10 @@
                                 <option :value="false">کاربر عادی</option>
                             </select>
                         </div>
-                        <button class="gray" @click="updateUser(editingUser)">ذخیره تغییرات</button>
-                        <button class="gray" @click="editingUser = null">لغو</button>
+                        <div class="flex-buttons">
+                            <button class="gray" @click="updateUser(editingUser)">ذخیره تغییرات</button>
+                            <button class="gray" @click="editingUser = null">لغو</button>
+                        </div>
                     </div>
 
                     <h4>افزودن کاربر جدید</h4>
@@ -847,16 +1004,22 @@
                     isSubmitting: false,
                     newPassword: '',
                     profileMenuOpen: false,
+                    scoreMenuOpen: false,
                     profileSection: '',
                     searchQuery: '',
                     lastActivityTime: null,
                     inactivityTimeout: null,
-                    loginTime: null
+                    loginTime: null,
+                    dailyLoginCount: {},
+                    dailyActivityTime: {},
+                    lastLoginDate: null,
+                    hideZeroStock: true // تیک مخفی کردن کالاهای با موجودی صفر
                 };
             },
             mounted() {
                 this.initializeData();
                 this.startInactivityTimer();
+                this.startActivityTracking();
                 window.addEventListener('mousemove', this.updateLastActivity);
                 window.addEventListener('keydown', this.updateLastActivity);
                 window.addEventListener('click', this.updateLastActivity);
@@ -866,6 +1029,7 @@
                 window.removeEventListener('keydown', this.updateLastActivity);
                 window.removeEventListener('click', this.updateLastActivity);
                 clearInterval(this.inactivityTimeout);
+                clearInterval(this.activityInterval);
             },
             computed: {
                 allTransactions() {
@@ -889,36 +1053,48 @@
                 groupedItems() {
                     const grouped = {};
                     this.items.forEach(item => {
-                        if (!grouped[item.name]) {
-                            grouped[item.name] = {
+                        const key = `${item.name}|${item.description || ''}`;
+                        if (!grouped[key]) {
+                            grouped[key] = {
+                                key,
                                 name: item.name,
                                 unit: item.unit,
                                 totalQuantity: 0,
                                 warehouses: [],
-                                description: item.description || ''
+                                description: item.description || '',
+                                ids: []
                             };
                         }
-                        const warehouseEntry = grouped[item.name].warehouses.find(wh => wh.name === item.warehouse);
+                        const warehouseEntry = grouped[key].warehouses.find(wh => wh.name === item.warehouse);
                         if (warehouseEntry) {
                             warehouseEntry.quantity += item.quantity;
                         } else {
-                            grouped[item.name].warehouses.push({
+                            grouped[key].warehouses.push({
                                 name: item.warehouse,
                                 quantity: item.quantity
                             });
                         }
-                        grouped[item.name].totalQuantity += item.quantity;
+                        grouped[key].totalQuantity += item.quantity;
+                        grouped[key].ids.push(item.id);
                     });
-                    Object.values(grouped).forEach(item => {
-                        item.warehouses = item.warehouses.filter(warehouse => warehouse.quantity > 0);
-                    });
-                    return Object.values(grouped).sort((a, b) => b.totalQuantity - a.totalQuantity);
+                    return Object.values(grouped)
+                        .map(item => ({
+                            ...item,
+                            warehouses: item.warehouses.filter(wh => wh.quantity > 0) // حذف انبارهای با موجودی صفر
+                        }))
+                        .sort((a, b) => a.name.localeCompare(b.name, 'fa')); // مرتب‌سازی بر اساس الفبا
                 },
                 filteredGroupedItems() {
-                    if (!this.searchQuery) return this.groupedItems;
-                    return this.groupedItems.filter(item => 
-                        item.name.toLowerCase().includes(this.searchQuery.toLowerCase())
-                    );
+                    let filtered = this.groupedItems;
+                    if (this.searchQuery) {
+                        filtered = filtered.filter(item => 
+                            item.name.toLowerCase().includes(this.searchQuery.toLowerCase())
+                        );
+                    }
+                    if (this.hideZeroStock) {
+                        filtered = filtered.filter(item => item.totalQuantity > 0);
+                    }
+                    return filtered;
                 },
                 userHistory() {
                     return this.transactions
@@ -933,19 +1109,14 @@
                         }))
                         .sort((a, b) => new Date(`${b.date} ${b.time}`) - new Date(`${a.date} ${a.time}`));
                 },
-                rankedUsers() {
-                    return [...this.users]
+                filteredUsers() {
+                    return this.users
+                        .filter(user => user.username !== '1890873' && user.username !== '1admin')
                         .map(user => ({
                             ...user,
-                            loginCount: user.loginCount || 0,
-                            totalActivityTime: user.totalActivityTime || 0
+                            score: this.calculateScore(user)
                         }))
-                        .sort((a, b) => {
-                            if (b.loginCount === a.loginCount) {
-                                return b.totalActivityTime - a.totalActivityTime;
-                            }
-                            return b.loginCount - a.loginCount;
-                        });
+                        .sort((a, b) => b.score - a.score);
                 }
             },
             methods: {
@@ -959,6 +1130,10 @@
                         this.users.forEach(user => {
                             user.loginCount = user.loginCount || 0;
                             user.totalActivityTime = user.totalActivityTime || 0;
+                            user.dailyLoginCount = user.dailyLoginCount || {};
+                            user.dailyActivityTime = user.dailyActivityTime || {};
+                            user.lastLoginDate = user.lastLoginDate || null;
+                            user.score = user.score || 0;
                         });
                     } catch (error) {
                         console.error('خطا در دریافت داده‌ها:', error);
@@ -976,7 +1151,7 @@
                         this.loggedIn = true;
                         this.currentUser = user;
                         this.loginTime = Date.now();
-                        user.loginCount = (user.loginCount || 0) + 1;
+                        this.updateLoginScore(user);
                         await updateData({ users: this.users, items: this.items, transactions: this.transactions });
                         this.username = '';
                         this.password = '';
@@ -988,13 +1163,14 @@
                 async logout() {
                     if (this.loginTime) {
                         const activityTime = Date.now() - this.loginTime;
-                        this.currentUser.totalActivityTime = (this.currentUser.totalActivityTime || 0) + activityTime;
+                        this.updateActivityScore(this.currentUser, activityTime);
                         await updateData({ users: this.users, items: this.items, transactions: this.transactions });
                     }
                     this.loggedIn = false;
                     this.currentUser = null;
                     this.loginTime = null;
                     clearInterval(this.inactivityTimeout);
+                    clearInterval(this.activityInterval);
                 },
                 startInactivityTimer() {
                     this.lastActivityTime = Date.now();
@@ -1010,6 +1186,48 @@
                 updateLastActivity() {
                     this.lastActivityTime = Date.now();
                 },
+                startActivityTracking() {
+                    this.activityInterval = setInterval(() => {
+                        if (this.loggedIn && this.loginTime) {
+                            const now = Date.now();
+                            const elapsed = now - this.lastActivityTime;
+                            if (elapsed < 60000) {
+                                const activityTime = now - this.loginTime;
+                                this.updateActivityScore(this.currentUser, activityTime);
+                            }
+                        }
+                    }, 300000);
+                },
+                updateLoginScore(user) {
+                    const today = new Date().toLocaleDateString('fa-IR');
+                    if (user.lastLoginDate !== today) {
+                        user.dailyLoginCount = {};
+                        user.dailyActivityTime = {};
+                        user.lastLoginDate = today;
+                    }
+                    user.dailyLoginCount[today] = (user.dailyLoginCount[today] || 0) + 1;
+                    user.loginCount = (user.loginCount || 0) + 1;
+                    user.score = this.calculateScore(user);
+                },
+                updateActivityScore(user, totalTime) {
+                    const today = new Date().toLocaleDateString('fa-IR');
+                    if (user.lastLoginDate !== today) {
+                        user.dailyLoginCount = {};
+                        user.dailyActivityTime = {};
+                        user.lastLoginDate = today;
+                    }
+                    const minutes = Math.min(Math.floor(totalTime / 60000), 90);
+                    user.dailyActivityTime[today] = minutes;
+                    user.totalActivityTime = (user.totalActivityTime || 0) + totalTime;
+                    user.score = this.calculateScore(user);
+                },
+                calculateScore(user) {
+                    const today = new Date().toLocaleDateString('fa-IR');
+                    const loginScore = Math.min((user.loginCount || 0), 10);
+                    const activityMinutes = Math.min((user.dailyActivityTime[today] || 0), 90);
+                    const activityScore = Math.floor(activityMinutes / 5);
+                    return loginScore + activityScore;
+                },
                 showSection(section) {
                     this.activeSection = section;
                     this.managementSection = '';
@@ -1021,32 +1239,38 @@
                 toggleProfileMenu() {
                     this.profileMenuOpen = !this.profileMenuOpen;
                 },
+                toggleScoreMenu() {
+                    this.scoreMenuOpen = !this.scoreMenuOpen;
+                },
                 showProfileSection(section) {
                     this.activeSection = 'profile';
                     this.profileSection = section;
                     this.profileMenuOpen = false;
                 },
                 searchItems() {
-                    this.filteredItems = this.groupedItems
+                    this.filteredItems = this.items
                         .filter(item => item.name.toLowerCase().includes(this.newItem.name.toLowerCase()))
                         .map(item => ({
-                            id: item.name,
+                            id: item.id,
                             name: item.name,
-                            unit: item.unit
+                            unit: item.unit,
+                            description: item.description
                         }));
                 },
                 searchWithdrawItems() {
-                    this.filteredItems = this.groupedItems
+                    this.filteredItems = this.items
                         .filter(item => item.name.toLowerCase().includes(this.withdrawItem.name.toLowerCase()))
                         .map(item => ({
-                            id: item.name,
+                            id: item.id,
                             name: item.name,
-                            unit: item.unit
+                            unit: item.unit,
+                            description: item.description
                         }));
                 },
                 selectItem(item) {
                     this.newItem.name = item.name;
                     this.newItem.unit = item.unit;
+                    this.newItem.description = item.description || '';
                     this.filteredItems = [];
                 },
                 async addItem() {
@@ -1057,13 +1281,13 @@
                     this.isSubmitting = true;
                     const existingItem = this.items.find(i => 
                         i.name === this.newItem.name && 
-                        i.warehouse === this.newItem.warehouse
+                        i.warehouse === this.newItem.warehouse && 
+                        i.description === this.newItem.description
                     );
                     const now = new Date();
                     const quantityToAdd = parseInt(this.newItem.quantity);
                     if (existingItem) {
                         existingItem.quantity += quantityToAdd;
-                        existingItem.description = this.newItem.description || existingItem.description;
                         this.transactions.unshift({
                             item: this.newItem.name,
                             quantity: quantityToAdd,
@@ -1106,9 +1330,10 @@
                 selectWithdrawItem(item) {
                     this.withdrawItem.name = item.name;
                     this.withdrawItem.unit = item.unit;
+                    this.withdrawItem.description = item.description || '';
                     this.availableWarehouses = this.items
-                        .filter(i => i.name === item.name && i.quantity > 0)
-                        .map(i => ({ name: i.warehouse, quantity: i.quantity }));
+                        .filter(i => i.name === item.name && i.quantity > 0 && i.description === item.description)
+                        .map(i => ({ name: i.warehouse, quantity: i.quantity, description: i.description }));
                     this.filteredItems = [];
                 },
                 async submitWithdraw() {
@@ -1118,9 +1343,10 @@
                     }
                     const item = this.items.find(i => 
                         i.name === this.withdrawItem.name && 
-                        i.warehouse === this.withdrawItem.warehouse
+                        i.warehouse === this.withdrawItem.warehouse && 
+                        i.description === this.withdrawItem.description
                     );
-                    if (item.quantity < parseInt(this.withdrawItem.quantity)) {
+                    if (!item || item.quantity < parseInt(this.withdrawItem.quantity)) {
                         alert('موجودی کافی نیست');
                         return;
                     }
@@ -1137,6 +1363,9 @@
                         warehouse: this.withdrawItem.warehouse,
                         type: 'برداشت'
                     });
+                    if (item.quantity === 0 && item.description) {
+                        this.items = this.items.filter(i => i.id !== item.id);
+                    }
                     await updateData({ users: this.users, items: this.items, transactions: this.transactions });
                     this.withdrawItem = { name: '', quantity: '', unit: '', location: '', warehouse: '' };
                     this.withdrawSuccessMessage = true;
@@ -1148,9 +1377,10 @@
                 withdrawFromStock(item) {
                     this.withdrawItem.name = item.name;
                     this.withdrawItem.unit = item.unit;
+                    this.withdrawItem.description = item.description || '';
                     this.availableWarehouses = this.items
-                        .filter(i => i.name === item.name)
-                        .map(i => ({ name: i.warehouse, quantity: i.quantity }));
+                        .filter(i => i.name === item.name && i.description === item.description)
+                        .map(i => ({ name: i.warehouse, quantity: i.quantity, description: i.description }));
                     this.activeSection = 'withdraw';
                 },
                 confirmDeleteItem(item) {
@@ -1159,7 +1389,7 @@
                     }
                 },
                 async deleteItem(item) {
-                    this.items = this.items.filter(i => i.name !== item.name);
+                    this.items = this.items.filter(i => !item.ids.includes(i.id));
                     await updateData({ users: this.users, items: this.items, transactions: this.transactions });
                 },
                 confirmDeleteUser(userId) {
@@ -1203,7 +1433,11 @@
                         id: Date.now(),
                         ...this.newUser,
                         loginCount: 0,
-                        totalActivityTime: 0
+                        totalActivityTime: 0,
+                        dailyLoginCount: {},
+                        dailyActivityTime: {},
+                        lastLoginDate: null,
+                        score: 0
                     });
                     await updateData({ users: this.users, items: this.items, transactions: this.transactions });
                     this.newUser = { name: '', username: '', password: '', isAdmin: false };
@@ -1227,21 +1461,24 @@
                 },
                 editStockItem(item) {
                     this.editingStockItem = { 
+                        id: item.ids[0], // فقط اولین id برای ویرایش
                         name: item.name, 
                         unit: item.unit, 
-                        warehouses: item.warehouses,
-                        originalName: item.name
+                        description: item.description || ''
                     };
                     this.activeSection = 'editStockItem';
                 },
                 async saveEditedStockItem() {
-                    const oldName = this.editingStockItem.originalName || this.editingStockItem.name;
-                    this.items.forEach(item => {
-                        if (item.name === oldName) {
-                            item.name = this.editingStockItem.name;
-                            item.unit = this.editingStockItem.unit;
-                        }
-                    });
+                    const item = this.items.find(i => i.id === this.editingStockItem.id);
+                    if (item) {
+                        const oldName = item.name;
+                        const oldDescription = item.description;
+                        this.items.filter(i => i.name === oldName && i.description === oldDescription).forEach(i => {
+                            i.name = this.editingStockItem.name;
+                            i.unit = this.editingStockItem.unit;
+                            i.description = this.editingStockItem.description;
+                        });
+                    }
                     await updateData({ users: this.users, items: this.items, transactions: this.transactions });
                     this.activeSection = 'stock';
                     this.editingStockItem = null;
@@ -1249,6 +1486,7 @@
                 addStockItem(item) {
                     this.newItem.name = item.name;
                     this.newItem.unit = item.unit;
+                    this.newItem.description = item.description || '';
                     this.activeSection = 'addItem';
                 },
                 changePassword() {
