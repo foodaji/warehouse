@@ -1111,7 +1111,7 @@
                 },
                 filteredUsers() {
                     return this.users
-                        .filter(user => user.username !== '1890873' && user.username !== '1admin')
+                        .filter(user => user.username !== 'user' && user.username !== 'admin')
                         .map(user => ({
                             ...user,
                             score: this.calculateScore(user)
@@ -1324,7 +1324,7 @@
                     setTimeout(() => {
                         this.showSuccessMessage = false;
                         this.isSubmitting = false;
-                    }, 3000);
+                    }, 1000);
                     this.newItem = { name: '', quantity: '', unit: '', warehouse: 'انبار داخل واحد', description: '' };
                 },
                 selectWithdrawItem(item) {
@@ -1372,7 +1372,7 @@
                     setTimeout(() => {
                         this.withdrawSuccessMessage = false;
                         this.isSubmitting = false;
-                    }, 3000);
+                    }, 1000);
                 },
                 withdrawFromStock(item) {
                     this.withdrawItem.name = item.name;
