@@ -6,6 +6,7 @@
     <title>مدیریت انبارهای واحد و ساختمان و تاسیسات</title>
     <link href="https://fonts.googleapis.com/css2?family=Vazir:wght@400;700&display=swap" rel="stylesheet">
     <style>
+        /* همون استایل‌های قبلی که اسکرول حذف شده */
         :root {
             --primary-color: #2c3e50;
             --secondary-color: #3498db;
@@ -242,6 +243,25 @@
             min-height: 80px;
         }
 
+        .form-group ul {
+            list-style: none;
+            padding: 0;
+            margin-top: 5px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .form-group ul li {
+            padding: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .form-group ul li:hover {
+            background-color: #f0f0f0;
+        }
+
         .flex-buttons {
             display: flex;
             flex-wrap: wrap;
@@ -411,7 +431,6 @@
             padding: 8px;
         }
 
-        /* استایل تیک در موجودی */
         .checkbox-container {
             display: flex;
             align-items: center;
@@ -651,7 +670,7 @@
                     <input type="text" id="itemName" v-model="newItem.name" @input="searchItems">
                     <ul v-if="filteredItems.length">
                         <li v-for="item in filteredItems" :key="item.id" @click="selectItem(item)">
-                            {{ item.name }} ({{ item.unit }})
+                            {{ item.name }} ({{ item.unit }}) {{ item.description ? '- ' + item.description : '' }}
                         </li>
                     </ul>
                 </div>
@@ -1013,7 +1032,7 @@
                     dailyLoginCount: {},
                     dailyActivityTime: {},
                     lastLoginDate: null,
-                    hideZeroStock: true // تیک مخفی کردن کالاهای با موجودی صفر
+                    hideZeroStock: true
                 };
             },
             mounted() {
@@ -1080,9 +1099,9 @@
                     return Object.values(grouped)
                         .map(item => ({
                             ...item,
-                            warehouses: item.warehouses.filter(wh => wh.quantity > 0) // حذف انبارهای با موجودی صفر
+                            warehouses: item.warehouses.filter(wh => wh.quantity > 0)
                         }))
-                        .sort((a, b) => a.name.localeCompare(b.name, 'fa')); // مرتب‌سازی بر اساس الفبا
+                        .sort((a, b) => a.name.localeCompare(b.name, 'fa'));
                 },
                 filteredGroupedItems() {
                     let filtered = this.groupedItems;
@@ -1114,7 +1133,7 @@
                         .filter(user => user.username !== 'user' && user.username !== 'admin')
                         .map(user => ({
                             ...user,
-                            score: this.calculateScore(user)
+                            score: user.totalScore
                         }))
                         .sort((a, b) => b.score - a.score);
                 }
@@ -1133,7 +1152,7 @@
                             user.dailyLoginCount = user.dailyLoginCount || {};
                             user.dailyActivityTime = user.dailyActivityTime || {};
                             user.lastLoginDate = user.lastLoginDate || null;
-                            user.score = user.score || 0;
+                            user.totalScore = user.totalScore || 0;
                         });
                     } catch (error) {
                         console.error('خطا در دریافت داده‌ها:', error);
@@ -1201,32 +1220,42 @@
                 updateLoginScore(user) {
                     const today = new Date().toLocaleDateString('fa-IR');
                     if (user.lastLoginDate !== today) {
-                        user.dailyLoginCount = {};
-                        user.dailyActivityTime = {};
+                        user.dailyLoginCount[today] = 0;
+                        user.dailyActivityTime[today] = 0;
                         user.lastLoginDate = today;
                     }
                     user.dailyLoginCount[today] = (user.dailyLoginCount[today] || 0) + 1;
                     user.loginCount = (user.loginCount || 0) + 1;
-                    user.score = this.calculateScore(user);
+                    this.calculateScore(user);
                 },
                 updateActivityScore(user, totalTime) {
                     const today = new Date().toLocaleDateString('fa-IR');
                     if (user.lastLoginDate !== today) {
-                        user.dailyLoginCount = {};
-                        user.dailyActivityTime = {};
+                        user.dailyLoginCount[today] = 0;
+                        user.dailyActivityTime[today] = 0;
                         user.lastLoginDate = today;
                     }
                     const minutes = Math.min(Math.floor(totalTime / 60000), 90);
                     user.dailyActivityTime[today] = minutes;
                     user.totalActivityTime = (user.totalActivityTime || 0) + totalTime;
-                    user.score = this.calculateScore(user);
+                    this.calculateScore(user);
                 },
                 calculateScore(user) {
                     const today = new Date().toLocaleDateString('fa-IR');
-                    const loginScore = Math.min((user.loginCount || 0), 10);
-                    const activityMinutes = Math.min((user.dailyActivityTime[today] || 0), 90);
-                    const activityScore = Math.floor(activityMinutes / 5);
-                    return loginScore + activityScore;
+                    const dailyLoginScore = Math.min((user.dailyLoginCount[today] || 0), 10);
+                    const dailyActivityMinutes = Math.min((user.dailyActivityTime[today] || 0), 90);
+                    const dailyActivityScore = Math.floor(dailyActivityMinutes / 5);
+                    const dailyScore = dailyLoginScore + dailyActivityScore;
+
+                    if (!user.lastDailyScoreDate || user.lastDailyScoreDate !== today) {
+                        user.totalScore = (user.totalScore || 0) + dailyScore;
+                        user.lastDailyScoreDate = today;
+                    } else {
+                        const previousDailyScore = user.lastDailyScore || 0;
+                        user.totalScore = user.totalScore - previousDailyScore + dailyScore;
+                    }
+                    user.lastDailyScore = dailyScore;
+                    return user.totalScore;
                 },
                 showSection(section) {
                     this.activeSection = section;
@@ -1247,24 +1276,22 @@
                     this.profileSection = section;
                     this.profileMenuOpen = false;
                 },
-                searchItems() {
-                    this.filteredItems = this.items
+                               searchItems() {
+                    this.filteredItems = this.groupedItems
                         .filter(item => item.name.toLowerCase().includes(this.newItem.name.toLowerCase()))
                         .map(item => ({
-                            id: item.id,
+                            id: item.name,
                             name: item.name,
-                            unit: item.unit,
-                            description: item.description
+                            unit: item.unit
                         }));
                 },
                 searchWithdrawItems() {
-                    this.filteredItems = this.items
+                    this.filteredItems = this.groupedItems
                         .filter(item => item.name.toLowerCase().includes(this.withdrawItem.name.toLowerCase()))
                         .map(item => ({
-                            id: item.id,
+                            id: item.name,
                             name: item.name,
-                            unit: item.unit,
-                            description: item.description
+                            unit: item.unit
                         }));
                 },
                 selectItem(item) {
@@ -1437,7 +1464,7 @@
                         dailyLoginCount: {},
                         dailyActivityTime: {},
                         lastLoginDate: null,
-                        score: 0
+                        totalScore: 0
                     });
                     await updateData({ users: this.users, items: this.items, transactions: this.transactions });
                     this.newUser = { name: '', username: '', password: '', isAdmin: false };
@@ -1461,7 +1488,7 @@
                 },
                 editStockItem(item) {
                     this.editingStockItem = { 
-                        id: item.ids[0], // فقط اولین id برای ویرایش
+                        id: item.ids[0],
                         name: item.name, 
                         unit: item.unit, 
                         description: item.description || ''
