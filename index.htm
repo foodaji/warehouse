@@ -5,8 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>مدیریت انبارهای واحد و ساختمان و تاسیسات</title>
     <link href="https://fonts.googleapis.com/css2?family=Vazir:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.rawgit.com/davidshimjs/qrcodejs/gh-pages/qrcode.min.js"></script>
     <style>
-        /* همون استایل‌های قبلی که اسکرول حذف شده */
+        /* استایل‌های قبلی بدون تغییر */
+        @font-face {
+            font-family: 'B Nazanin';
+            src: url('BNazanin.eot');
+            src: url('BNazanin.eot?#iefix') format('embedded-opentype'),
+                 url('BNazanin.woff2') format('woff2'),
+                 url('BNazanin.woff') format('woff'),
+                 url('BNazanin.ttf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+
         :root {
             --primary-color: #2c3e50;
             --secondary-color: #3498db;
@@ -14,11 +26,12 @@
             --success-color: #27ae60;
             --background: #f8f9fa;
             --highlight-color: #f39c12;
+            --equipment-color: #f39c12;
         }
 
         * {
             box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Vazir', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Vazir added as primary font */
             margin: 0;
             padding: 0;
         }
@@ -149,10 +162,14 @@
             border: 1px solid #ddd;
             border-radius: 4px;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-            display: flex;
+            display: none;
             flex-direction: column;
             z-index: 1000;
             width: 150px;
+        }
+
+        .profile-menu.show {
+            display: flex;
         }
 
         .profile-menu button {
@@ -209,6 +226,10 @@
         .dashboard-buttons button.manage:disabled {
             background-color: #ccc;
             cursor: not-allowed;
+        }
+
+        .dashboard-buttons button.equipment {
+            background-color: var(--equipment-color);
         }
 
         .form-group {
@@ -275,6 +296,16 @@
             min-width: 100px;
             padding: 8px 16px;
             font-size: 0.9rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            background-color: var(--secondary-color);
+            color: white;
+            transition: opacity 0.3s;
+        }
+
+        .flex-buttons button:hover {
+            opacity: 0.9;
         }
 
         table {
@@ -329,6 +360,10 @@
             background-color: var(--success-color);
         }
 
+        .management-buttons button.equipment-history {
+            background-color: var(--highlight-color);
+        }
+
         .success-message {
             color: var(--success-color);
             margin-top: 10px;
@@ -344,14 +379,6 @@
             z-index: 2000;
             font-size: 1rem;
             text-align: center;
-        }
-
-        button.primary {
-            background-color: var(--secondary-color);
-        }
-
-        button.success {
-            background-color: var(--success-color);
         }
 
         .score-button {
@@ -387,7 +414,12 @@
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
             z-index: 1000;
             padding: 15px;
+            display: none;
             animation: slideIn 0.3s ease-in-out;
+        }
+
+        .score-menu.show {
+            display: block;
         }
 
         @keyframes slideIn {
@@ -481,123 +513,218 @@
             display: block;
         }
 
+        /* استایل‌های جدید برای بخش پرینت */
+        .print-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .print-size-selector {
+            display: flex;
+            gap: 100px;
+            align-items: center;
+        }
+
+        .print-size-selector label {
+            margin-left: 5px;
+        }
+
+        .print-button {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 8px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .print-button:hover {
+            opacity: 0.9;
+        }
+
+        .select-all-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .print-labels-container {
+            display: none;
+        }
+
+        /* استایل‌های جدید برای چاپ A4 و A5 */
+        .print-page-a4 {
+            width: 210mm;
+            height: 297mm;
+            padding: 5mm 10mm;
+            margin: 0 auto;
+            background: white;
+            box-sizing: border-box;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(8, 1fr);
+            grid-gap: 2mm;
+            page-break-after: always;
+            font-family: 'B Nazanin', 'Vazir', sans-serif;
+        }
+
+        .print-page-a5 {
+            width: 148mm;
+            height: 210mm;
+            padding: 5mm 10mm;
+            margin: 0 auto;
+            background: white;
+            box-sizing: border-box;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            grid-template-rows: repeat(5, 1fr);
+            grid-gap: 2mm;
+            page-break-after: always;
+            font-family: 'B Nazanin', 'Vazir', sans-serif;
+        }
+
+        .label-item {
+            border: 1px dashed #ccc;
+            display: flex;
+            flex-direction: row-reverse;
+            align-items: center;
+            justify-content: space-between;
+            padding: 2mm;
+            box-sizing: border-box;
+            text-align: right;
+            font-family: 'Vazir', sans-serif;
+            direction: rtl;
+        }
+
+        .label-name {
+            font-size: 10pt;
+            margin-right: 2mm;
+            font-weight: bold;
+            flex: 1;
+            word-break: break-word;
+            font-family: 'Vazir', sans-serif; /* Ensure Vazir for product name */
+        }
+
+        .label-qrcode {
+            width: 20mm;
+            height: 20mm;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: 2mm;
+        }
+
+        .transfer-checkbox {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .transfer-checkbox label {
+            margin-right: 10px;
+        }
+
+        .returned-row {
+            background-color: #a5d6a7 !important;
+            border-left: 4px solid var(--success-color);
+        }
+
+        .equipment-alert {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: var(--highlight-color);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+            z-index: 2000;
+            max-width: 400px;
+            animation: slideIn 0.3s ease-in-out;
+        }
+
+        .equipment-alert button {
+            background-color: var(--danger-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 5px 10px;
+            margin-top: 10px;
+            cursor: pointer;
+        }
+
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            .print-labels-container, .print-labels-container * {
+                visibility: visible;
+            }
+            .print-labels-container {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                height: 100%;
+                background: white;
+                font-family: 'B Nazanin', 'Vazir', sans-serif !important;
+            }
+            .print-page-a4, .print-page-a5 {
+                border: none;
+            }
+            .label-item {
+                border: 1px solid #000;
+            }
+            @page {
+                size: auto;
+                margin: 0;
+            }
+        }
+
         @media (max-width: 768px) {
-            .header {
-                flex-direction: column;
-                text-align: center;
-            }
-
-            .header h2 {
-                margin-bottom: 10px;
-            }
-
-            .dashboard-buttons {
-                grid-template-columns: 1fr;
-            }
-
-            .login-form {
-                padding: 15px;
-            }
-
-            .login-form h2 {
-                font-size: 1.25rem;
-            }
-
-            table {
-                font-size: 0.8rem;
-            }
-
-            th, td {
-                padding: 8px;
-            }
-
-            .management-buttons button {
-                font-size: 0.85rem;
-                padding: 8px 10px;
-            }
-
-            .profile-menu {
-                width: 120px;
-            }
-
-            .profile-menu button {
-                font-size: 0.85rem;
-            }
-
-            .score-menu {
-                width: 250px;
+            .header { flex-direction: column; text-align: center; }
+            .header h2 { margin-bottom: 10px; }
+            .dashboard-buttons { grid-template-columns: 1fr; }
+            .login-form { padding: 15px; }
+            .login-form h2 { font-size: 1.25rem; }
+            table { font-size: 0.8rem; }
+            th, td { padding: 8px; }
+            .management-buttons button { font-size: 0.85rem; padding: 8px 10px; }
+            .profile-menu { width: 120px; }
+            .profile-menu button { font-size: 0.85rem; }
+            .score-menu { width: 250px; }
+            .equipment-alert {
+                max-width: 300px;
+                right: 10px;
+                left: 10px;
             }
         }
 
         @media (max-width: 480px) {
-            .login-form {
-                max-width: 100%;
+            .login-form { max-width: 100%; padding: 10px; }
+            .login-form h2 { font-size: 1.1rem; }
+            .login-form input, .login-form button { font-size: 0.9rem; }
+            .header h2 { font-size: 1rem; }
+            .header .welcome-message { font-size: 0.9rem; }
+            .dashboard-buttons button { font-size: 0.9rem; padding: 12px; }
+            .form-group label { font-size: 0.85rem; }
+            .form-group input, .form-group select, .form-group textarea { font-size: 0.85rem; }
+            table { font-size: 0.75rem; }
+            th, td { padding: 6px; }
+            .flex-buttons button { font-size: 0.85rem; padding: 8px; }
+            .management-buttons button { font-size: 0.8rem; padding: 6px 8px; }
+            .success-message { font-size: 0.9rem; padding: 10px; }
+            .score-button { padding: 8px 15px; font-size: 0.9rem; }
+            .score-menu { width: 200px; top: 50px; }
+            .equipment-alert {
+                max-width: 250px;
                 padding: 10px;
             }
-
-            .login-form h2 {
-                font-size: 1.1rem;
-            }
-
-            .login-form input,
-            .login-form button {
-                font-size: 0.9rem;
-            }
-
-            .header h2 {
-                font-size: 1rem;
-            }
-
-            .header .welcome-message {
-                font-size: 0.9rem;
-            }
-
-            .dashboard-buttons button {
-                font-size: 0.9rem;
-                padding: 12px;
-            }
-
-            .form-group label {
-                font-size: 0.85rem;
-            }
-
-            .form-group input,
-            .form-group select,
-            .form-group textarea {
-                font-size: 0.85rem;
-            }
-
-            table {
-                font-size: 0.75rem;
-            }
-
-            th, td {
-                padding: 6px;
-            }
-
-            .flex-buttons button {
-                font-size: 0.85rem;
-                padding: 8px;
-            }
-
-            .management-buttons button {
-                font-size: 0.8rem;
-                padding: 6px 8px;
-            }
-
-            .success-message {
-                font-size: 0.9rem;
-                padding: 10px;
-            }
-
-            .score-button {
-                padding: 8px 15px;
-                font-size: 0.9rem;
-            }
-
-            .score-menu {
-                width: 200px;
-                top: 50px;
+            .returned-row {
+                border-left: 3px solid var(--success-color);
             }
         }
     </style>
@@ -612,18 +739,24 @@
             <h2>ورود به سیستم مدیریت انبار</h2>
             <div class="form-group">
                 <label for="username">نام کاربری</label>
-                <input type="text" id="username" v-model="username">
+                <input type="text" id="username" v-model="username" @keyup.enter="login">
             </div>
             <div class="form-group">
                 <label for="password">رمز عبور</label>
-                <input type="password" id="password" v-model="password">
+                <input type="password" id="password" v-model="password" @keyup.enter="login">
             </div>
-            <button class="primary" @click="login">ورود</button>
+            <button @click="login">ورود</button>
         </div>
 
         <div v-if="loggedIn">
+            <div v-if="showEquipmentAlert" class="equipment-alert">
+                <h4>توجه!</h4>
+                <p>{{ equipmentAlertMessage }}</p>
+                <button @click="dismissEquipmentAlert">متوجه شدم</button>
+            </div>
+
             <button class="score-button" @click="toggleScoreMenu">امتیاز کاربران</button>
-            <div v-if="scoreMenuOpen" class="score-menu">
+            <div v-if="scoreMenuOpen" class="score-menu show">
                 <button class="close-btn" @click="toggleScoreMenu">×</button>
                 <h4>امتیاز کاربران</h4>
                 <p>امتیازات بر اساس فعالیت کاربران در سامانه تعیین می‌شود.</p>
@@ -631,13 +764,15 @@
                     <thead>
                         <tr>
                             <th>نام کاربر</th>
-                            <th>امتیاز</th>
+                            <th>امتیاز کل</th>
+                            <th>امتیاز این ماه</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr v-for="user in filteredUsers" :key="user.id">
                             <td>{{ user.name }}</td>
                             <td>{{ user.score }}</td>
+                            <td>{{ user.monthlyScore }}</td>
                         </tr>
                     </tbody>
                 </table>
@@ -647,9 +782,9 @@
                 <h2>مدیریت انبارهای واحد ساختمان و تاسیسات</h2>
                 <div style="display: flex; align-items: center; gap: 10px; position: relative;">
                     <span class="welcome-message">خوش آمدید، {{ currentUser.name }}!</span>
-                    <button class="gray" @click="toggleProfileMenu">ورود به پروفایل</button>
-                    <button class="gray" @click="logout">خروج</button>
-                    <div v-if="profileMenuOpen" class="profile-menu">
+                    <button @click="toggleProfileMenu">ورود به پروفایل</button>
+                    <button @click="logout">خروج</button>
+                    <div v-if="profileMenuOpen" class="profile-menu show">
                         <button @click="showProfileSection('changePassword')">تغییر رمز عبور</button>
                         <button @click="showProfileSection('history')">تاریخچه فعالیت من</button>
                     </div>
@@ -660,7 +795,8 @@
                 <button class="add-item" @click="showSection('addItem')">افزودن کالا به انبار</button>
                 <button class="withdraw-item" @click="showSection('withdraw')">برداشت از انبار</button>
                 <button class="view-stock" @click="showSection('stock')">موجودی انبار</button>
-                <button class="manage" @click="showSection('management')" :disabled="!currentUser.isAdmin">مدیریت</button>
+                <button class="equipment" @click="showSection('equipment')">تحویل تجهیزات</button>
+                <button class="manage" @click="showSection('management')" :disabled="!currentUser.isadmin">مدیریت</button>
             </div>
 
             <div v-if="activeSection === 'addItem'">
@@ -669,7 +805,7 @@
                     <label for="itemName" class="required">نام کالا</label>
                     <input type="text" id="itemName" v-model="newItem.name" @input="searchItems">
                     <ul v-if="filteredItems.length">
-                        <li v-for="item in filteredItems" :key="item.id" @click="selectItem(item)">
+                        <li v-for="item in filteredItems" :key="item.name" @click="selectItem(item)">
                             {{ item.name }} ({{ item.unit }}) {{ item.description ? '- ' + item.description : '' }}
                         </li>
                     </ul>
@@ -696,8 +832,8 @@
                     <textarea id="itemDescription" v-model="newItem.description"></textarea>
                 </div>
                 <div class="flex-buttons">
-                    <button class="gray" @click="addItem" :disabled="isSubmitting">ذخیره</button>
-                    <button class="gray" @click="activeSection = ''">لغو</button>
+                    <button @click="addItem" :disabled="isSubmitting">ذخیره</button>
+                    <button @click="activeSection = ''">لغو</button>
                 </div>
                 <div v-if="isSubmitting" class="overlay">
                     <div class="loader"></div>
@@ -711,7 +847,7 @@
                     <label for="withdrawItemName" class="required">نام کالا</label>
                     <input type="text" id="withdrawItemName" v-model="withdrawItem.name" @input="searchWithdrawItems">
                     <ul v-if="filteredItems.length">
-                        <li v-for="item in filteredItems" :key="item.id" @click="selectWithdrawItem(item)">
+                        <li v-for="item in filteredItems" :key="item.name" @click="selectWithdrawItem(item)">
                             {{ item.name }} ({{ item.unit }}) {{ item.description ? '- ' + item.description : '' }}
                         </li>
                     </ul>
@@ -732,13 +868,29 @@
                         </option>
                     </select>
                 </div>
-                <div class="form-group">
+                <div class="transfer-checkbox">
+                    <label>
+                        <input type="checkbox" v-model="isTransfer">
+                        <span class="checkmark"></span>
+                        جابجایی به سایر انبارها
+                    </label>
+                </div>
+                <div class="form-group" v-if="!isTransfer">
                     <label for="withdrawLocation" class="required">محل استفاده</label>
                     <input type="text" id="withdrawLocation" v-model="withdrawItem.location">
                 </div>
+                <div class="form-group" v-else>
+                    <label for="transferDestination" class="required">انبار مقصد</label>
+                    <select id="transferDestination" v-model="withdrawItem.destinationWarehouse">
+                        <option value="انبار داخل واحد">انبار داخل واحد</option>
+                        <option value="انبار کانکس">انبار کانکس</option>
+                        <option value="انبار قدیم بزرگ">انبار قدیم بزرگ</option>
+                        <option value="انبار قدیم کوچک">انبار قدیم کوچک</option>
+                    </select>
+                </div>
                 <div class="flex-buttons">
-                    <button class="gray" @click="submitWithdraw" :disabled="isSubmitting">ثبت</button>
-                    <button class="gray" @click="activeSection = ''">لغو</button>
+                    <button @click="submitWithdraw" :disabled="isSubmitting">ثبت</button>
+                    <button @click="activeSection = ''">لغو</button>
                 </div>
                 <div v-if="isSubmitting" class="overlay">
                     <div class="loader"></div>
@@ -752,6 +904,23 @@
                     <label for="searchStock">جستجوی کالا</label>
                     <input type="text" id="searchStock" v-model="searchQuery" placeholder="نام کالا را وارد کنید">
                 </div>
+                <div class="print-actions">
+                    <div class="checkbox-container select-all-checkbox">
+                        <label>
+                            <input type="checkbox" v-model="selectAll" @change="toggleSelectAll">
+                            <span class="checkmark"></span>
+                            انتخاب همه
+                        </label>
+                    </div>
+                    <div class="print-size-selector" v-if="currentUser.isadmin">
+                        <button class="print-button" @click="printSelectedItems('a4')" :disabled="selectedItems.length === 0">
+                            پرینت A4
+                        </button>
+                        <button class="print-button" @click="printSelectedItems('a5')" :disabled="selectedItems.length === 0">
+                            پرینت A5
+                        </button>
+                    </div>
+                </div>
                 <div class="checkbox-container">
                     <label>
                         <input type="checkbox" v-model="hideZeroStock">
@@ -762,6 +931,7 @@
                 <table>
                     <thead>
                         <tr>
+                            <th>انتخاب</th>
                             <th>نام کالا</th>
                             <th>واحد</th>
                             <th>مقدار</th>
@@ -772,6 +942,14 @@
                     </thead>
                     <tbody>
                         <tr v-for="item in filteredGroupedItems" :key="item.key">
+                            <td>
+                                <div class="checkbox-container">
+                                    <label>
+                                        <input type="checkbox" v-model="selectedItems" :value="item">
+                                        <span class="checkmark"></span>
+                                    </label>
+                                </div>
+                            </td>
                             <td>{{ item.name }}</td>
                             <td>{{ item.unit }}</td>
                             <td>{{ item.totalQuantity }}</td>
@@ -784,14 +962,24 @@
                             </td>
                             <td>{{ item.description || '-' }}</td>
                             <td>
-                                <button class="gray" @click="withdrawFromStock(item)">برداشت</button>
-                                <button class="gray" @click="addStockItem(item)">افزودن</button>
-                                <button class="gray" @click="editStockItem(item)" v-if="currentUser.isAdmin">ویرایش</button>
-                                <button class="gray" @click="confirmDeleteItem(item)" v-if="currentUser.isAdmin">حذف</button>
+                                <button @click="withdrawFromStock(item)">برداشت</button>
+                                <button @click="addStockItem(item)">افزودن</button>
+                                <button @click="editStockItem(item)" v-if="currentUser.isadmin">ویرایش</button>
+                                <button @click="confirmDeleteItem(item)" v-if="currentUser.isadmin">حذف</button>
                             </td>
                         </tr>
                     </tbody>
                 </table>
+
+                <div class="print-labels-container" ref="printLabelsContainer">
+                    <div v-for="(page, pageIndex) in printPages" :key="pageIndex"
+                         :class="['print-page-' + pageSize]">
+                        <div class="label-item" v-for="(item, index) in page" :key="index">
+                            <div class="label-name">{{ item.name }}</div>
+                            <div class="label-qrcode" :id="'qrcode-' + item.key"></div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div v-if="activeSection === 'editStockItem'">
@@ -809,21 +997,81 @@
                     <textarea id="editStockItemDescription" v-model="editingStockItem.description"></textarea>
                 </div>
                 <div class="flex-buttons">
-                    <button class="gray" @click="saveEditedStockItem">ذخیره</button>
-                    <button class="gray" @click="activeSection = ''">لغو</button>
+                    <button @click="saveEditedStockItem">ذخیره</button>
+                    <button @click="activeSection = 'stock'">لغو</button>
                 </div>
             </div>
 
+            <div v-if="activeSection === 'equipment'">
+                <h3>تحویل تجهیزات به همکاران</h3>
+                <div class="form-group">
+                    <label for="equipmentName" class="required">نام تجهیز</label>
+                    <input type="text" id="equipmentName" v-model="newEquipment.name">
+                </div>
+                <div class="form-group">
+                    <label for="equipmentRecipient" class="required">تحویل گیرنده</label>
+                    <input type="text" id="equipmentRecipient" v-model="newEquipment.recipient">
+                </div>
+                <div class="form-group">
+                    <label for="equipmentNotes">توضیحات</label>
+                    <textarea id="equipmentNotes" v-model="newEquipment.notes"></textarea>
+                </div>
+                <div class="flex-buttons">
+                    <button @click="submitEquipment" :disabled="isSubmitting">ثبت تحویل</button>
+                    <button @click="activeSection = ''">لغو</button>
+                </div>
+                <div v-if="isSubmitting" class="overlay">
+                    <div class="loader"></div>
+                </div>
+                <div v-if="equipmentSuccessMessage" class="success-message">ثبت با موفقیت انجام شد!</div>
+
+                <h3 style="margin-top: 30px;">لیست تجهیزات تحویل داده شده</h3>
+                <table>
+                    <thead>
+                         <tr>
+                            <th>نام تجهیز</th>
+                            <th>تحویل‌گیرنده</th>
+                            <th>تاریخ تحویل</th>
+                            <th>ساعت تحویل</th>
+                            <th>تحویل‌دهنده</th>
+                            <th>وضعیت</th>
+                            <th>تاریخ بازگشت</th>
+                            <th>ساعت بازگشت</th>
+                            <th>بازگرداننده</th>
+                            <th>توضیحات</th>
+                            <th>عملیات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="(equip, index) in filteredEquipmentList" :key="index" :class="{'returned-row': equip.status === 'returned'}">
+                            <td>{{ equip.item_name }}</td>
+                            <td>{{ equip.recipient }}</td>
+                            <td>{{ this.formatGregorianToShamsiForDisplay(equip.delivery_date) }}</td>
+                            <td>{{ equip.delivery_time }}</td>
+                            <td>{{ equip.delivered_by }}</td>
+                            <td>{{ equip.status === 'returned' ? 'تحویل واحد شده' : 'در دست تحویل گیرنده' }}</td>
+                            <td>{{ equip.return_date ? this.formatGregorianToShamsiForDisplay(equip.return_date) : '-' }}</td>
+                            <td>{{ equip.return_time || '-' }}</td>
+                            <td>{{ equip.returned_by || '-' }}</td>
+                            <td>{{ equip.notes || '-' }}</td>
+                            <td>
+                                <button v-if="equip.status !== 'returned'" @click="returnEquipment(equip)">تحویل به واحد</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
             <div v-if="activeSection === 'profile'">
-                <div v-if="profileSection === 'changePassword'" class="form-group" style="margin-top: 20px;">
+                <div v-if="profileSection === 'changePassword'" style="margin-top: 20px;">
                     <h3>تغییر رمز عبور</h3>
                     <div class="form-group">
                         <label for="newPassword">رمز عبور جدید</label>
                         <input type="password" id="newPassword" v-model="newPassword">
                     </div>
                     <div class="flex-buttons">
-                        <button class="gray" @click="changePassword">ذخیره</button>
-                        <button class="gray" @click="activeSection = ''">بازگشت</button>
+                        <button @click="changePassword">ذخیره</button>
+                        <button @click="activeSection = ''">بازگشت</button>
                     </div>
                 </div>
 
@@ -838,16 +1086,18 @@
                                 <th>نام کالا</th>
                                 <th>مقدار</th>
                                 <th>انبار</th>
+                                <th>محل استفاده</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr v-for="entry in userHistory" :key="entry.date + entry.time + entry.item">
-                                <td>{{ entry.date }}</td>
+                            <tr v-for="entry in userHistory" :key="entry.date + entry.time + entry.item_name">
+                                <td>{{ this.formatGregorianToShamsiForDisplay(entry.date) }}</td>
                                 <td>{{ entry.time }}</td>
                                 <td>{{ entry.type }}</td>
-                                <td>{{ entry.item }}</td>
+                                <td>{{ entry.item_name }}</td>
                                 <td>{{ entry.quantity }}</td>
-                                <td>{{ entry.warehouse }}</td>
+                                <td>{{ entry.warehouse || '-' }}</td>
+                                <td>{{ entry.location || '-' }}</td>
                             </tr>
                         </tbody>
                     </table>
@@ -856,144 +1106,353 @@
 
             <div v-if="activeSection === 'management'">
                 <h3>مدیریت</h3>
-                <div class="form-group">
-                    <label for="managementPassword">رمز عبور</label>
-                    <input type="password" id="managementPassword" v-model="managementPassword">
-                </div>
-                <div class="flex-buttons">
-                    <button class="gray" @click="checkManagementPassword">تایید</button>
-                    <button class="gray" @click="activeSection = ''">لغو</button>
-                </div>
-
-                <div v-if="managementAccess" class="management-buttons">
-                    <button class="reports" @click="showManagementSection('reports')">گزارش‌گیری</button>
-                    <button class="user-management" @click="showManagementSection('userManagement')">مدیریت کاربران</button>
-                    <button class="add-bulk-items" @click="showManagementSection('bulkItems')">افزودن لیست کالا</button>
+                <div v-if="!managementAccess">
+                    <div class="form-group">
+                        <label for="managementPassword">رمز عبور</label>
+                        <input type="password" id="managementPassword" v-model="managementPassword">
+                    </div>
+                    <div class="flex-buttons">
+                        <button @click="checkManagementPassword">تایید</button>
+                        <button @click="activeSection = ''">لغو</button>
+                    </div>
                 </div>
 
-                <div v-if="managementSection === 'reports'">
-                    <h4>گزارش عملیات</h4>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>تاریخ</th>
-                                <th>ساعت</th>
-                                <th>نوع عملیات</th>
-                                <th>نام کالا</th>
-                                <th>مقدار</th>
-                                <th>فرد انجام‌دهنده</th>
-                                <th>انبار</th>
-                                <th>محل استفاده</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr v-for="transaction in allTransactions" :key="transaction.date + transaction.time + transaction.item">
-                                <td>{{ transaction.date }}</td>
-                                <td>{{ transaction.time }}</td>
-                                <td>{{ transaction.type }}</td>
-                                <td>{{ transaction.item }}</td>
-                                <td>{{ transaction.quantity }}</td>
-                                <td>{{ transaction.user }}</td>
-                                <td>{{ transaction.warehouse || '-' }}</td>
-                                <td>{{ transaction.location || '-' }}</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
+                <div v-if="managementAccess">
+                    <div class="management-buttons">
+                        <button class="reports" @click="showManagementSection('reports')">گزارش‌گیری</button>
+                        <button class="user-management" @click="showManagementSection('userManagement')">مدیریت کاربران</button>
+                        <button class="add-bulk-items" @click="showManagementSection('bulkItems')">افزودن لیست کالا</button>
+                        <button class="equipment-history" @click="showManagementSection('equipmentHistory')">تاریخچه تحویل تجهیزات</button>
+                    </div>
 
-                <div v-if="managementSection === 'userManagement'">
-                    <h4>مدیریت کاربران</h4>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>نام کاربری</th>
-                                <th>نام کامل</th>
-                                <th>دسترسی</th>
-                                <th>عملیات</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr v-for="user in users" :key="user.id">
-                                <td>{{ user.username }}</td>
-                                <td>{{ user.name }}</td>
-                                <td>{{ user.isAdmin ? 'ادمین' : 'کاربر عادی' }}</td>
-                                <td>
-                                    <button class="gray" @click="editUser(user)">ویرایش</button>
-                                    <button class="danger" @click="confirmDeleteUser(user.id)">حذف</button>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+                    <div v-if="managementSection === 'reports'">
+                        <h4>گزارش عملیات</h4>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>تاریخ</th>
+                                    <th>ساعت</th>
+                                    <th>نوع عملیات</th>
+                                    <th>نام کالا</th>
+                                    <th>مقدار</th>
+                                    <th>فرد انجام‌دهنده</th>
+                                    <th>انبار</th>
+                                    <th>محل استفاده</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr v-for="transaction in allTransactions" :key="transaction.date + transaction.time + transaction.item_name">
+                                    <td>{{ this.formatGregorianToShamsiForDisplay(transaction.date) }}</td>
+                                    <td>{{ transaction.time }}</td>
+                                    <td>{{ transaction.type }}</td>
+                                    <td>{{ transaction.item_name }}</td>
+                                    <td>{{ transaction.quantity }}</td>
+                                    <td>{{ transaction.user }}</td>
+                                    <td>{{ transaction.warehouse || '-' }}</td>
+                                    <td>{{ transaction.location || '-' }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
 
-                    <div v-if="editingUser">
-                        <h4>ویرایش کاربر</h4>
+                    <div v-if="managementSection === 'userManagement'">
+                        <h4>مدیریت کاربران</h4>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>نام کاربری</th>
+                                    <th>نام کامل</th>
+                                    <th>دسترسی</th>
+                                    <th>امتیاز کل</th>
+                                    <th>امتیاز این ماه</th>
+                                    <th>عملیات</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr v-for="user in users" :key="user.id">
+                                    <td>{{ user.username }}</td>
+                                    <td>{{ user.name }}</td>
+                                    <td>{{ user.isadmin ? 'ادمین' : 'کاربر عادی' }}</td>
+                                    <td>{{ user.totalScore || 0 }}</td>
+                                    <td>{{ this.calculateMonthlyScore(user.id) }}</td>
+                                    <td>
+                                        <button @click="editUser(user)">ویرایش</button>
+                                        <button @click="confirmDeleteUser(user.id)">حذف</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <div v-if="editingUser">
+                            <h4>ویرایش کاربر</h4>
+                            <div class="form-group">
+                                <label for="editUserName">نام و نام خانوادگی</label>
+                                <input type="text" id="editUserName" v-model="editingUser.name">
+                            </div>
+                            <div class="form-group">
+                                <label for="editUsername">نام کاربری</label>
+                                <input type="text" id="editUsername" v-model="editingUser.username">
+                            </div>
+                            <div class="form-group">
+                                <label for="editPassword">رمز عبور</label>
+                                <input type="password" id="editPassword" v-model="editingUser.password" placeholder="برای عدم تغییر، خالی بگذارید">
+                            </div>
+                            <div class="form-group">
+                                <label for="editAccessLevel">سطح دسترسی</label>
+                                <select id="editAccessLevel" v-model="editingUser.isadmin">
+                                    <option :value="true">ادمین</option>
+                                    <option :value="false">کاربر عادی</option>
+                                </select>
+                            </div>
+                            <div class="flex-buttons">
+                                <button @click="updateUser(editingUser)">ذخیره تغییرات</button>
+                                <button @click="editingUser = null">لغو</button>
+                            </div>
+                        </div>
+
+                        <h4>افزودن کاربر جدید</h4>
                         <div class="form-group">
-                            <label for="editUserName">نام و نام خانوادگی</label>
-                            <input type="text" id="editUserName" v-model="editingUser.name">
+                            <label for="newUserName">نام و نام خانوادگی</label>
+                            <input type="text" id="newUserName" v-model="newUser.name">
                         </div>
                         <div class="form-group">
-                            <label for="editUsername">نام کاربری</label>
-                            <input type="text" id="editUsername" v-model="editingUser.username">
+                            <label for="newUsername">نام کاربری</label>
+                            <input type="text" id="newUsername" v-model="newUser.username">
                         </div>
                         <div class="form-group">
-                            <label for="editPassword">رمز عبور</label>
-                            <input type="password" id="editPassword" v-model="editingUser.password">
+                            <label for="newPassword">رمز عبور</label>
+                            <input type="password" id="newPassword" v-model="newUser.password">
                         </div>
                         <div class="form-group">
-                            <label for="editAccessLevel">سطح دسترسی</label>
-                            <select id="editAccessLevel" v-model="editingUser.isAdmin">
+                            <label for="accessLevel">سطح دسترسی</label>
+                            <select id="accessLevel" v-model="newUser.isadmin">
                                 <option :value="true">ادمین</option>
                                 <option :value="false">کاربر عادی</option>
                             </select>
                         </div>
-                        <div class="flex-buttons">
-                            <button class="gray" @click="updateUser(editingUser)">ذخیره تغییرات</button>
-                            <button class="gray" @click="editingUser = null">لغو</button>
+                        <button @click="addUser">افزودن کاربر</button>
+                    </div>
+
+                    <div v-if="managementSection === 'bulkItems'">
+                        <h4>افزودن لیست کالا</h4>
+                        <div class="form-group">
+                            <textarea placeholder="لیست کالاها (فرمت: نام کالا,واحد,توضیحات,انبار)" v-model="bulkItems"></textarea>
+                             <small>هر کالا در یک خط جدید. انبار و توضیحات اختیاری هستند (مقدار پیشفرض برای انبار: انبار داخل واحد).</small>
                         </div>
+                        <button @click="addBulkItems">ذخیره</button>
                     </div>
 
-                    <h4>افزودن کاربر جدید</h4>
-                    <div class="form-group">
-                        <label for="newUserName">نام و نام خانوادگی</label>
-                        <input type="text" id="newUserName" v-model="newUser.name">
+                    <div v-if="managementSection === 'equipmentHistory'">
+                        <h4>تاریخچه تحویل تجهیزات</h4>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>نام تجهیز</th>
+                                    <th>تحویل‌گیرنده</th>
+                                    <th>تاریخ تحویل</th>
+                                    <th>ساعت تحویل</th>
+                                    <th>تحویل‌دهنده</th>
+                                    <th>وضعیت</th>
+                                    <th>تاریخ بازگشت</th>
+                                    <th>ساعت بازگشت</th>
+                                    <th>بازگرداننده</th>
+                                    <th>توضیحات</th>
+                                    <th>عملیات</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr v-for="(equip, index) in allEquipmentHistory" :key="index" :class="{'returned-row': equip.status === 'returned'}">
+                                   <td>{{ equip.item_name }}</td>
+                                    <td>{{ equip.recipient }}</td>
+                                    <td>{{ this.formatGregorianToShamsiForDisplay(equip.delivery_date) }}</td>
+                                    <td>{{ equip.delivery_time }}</td>
+                                    <td>{{ equip.delivered_by }}</td>
+                                    <td>{{ equip.status === 'returned' ? 'تحویل واحد شده' : 'در دست تحویل گیرنده' }}</td>
+                                    <td>{{ equip.return_date ? this.formatGregorianToShamsiForDisplay(equip.return_date) : '-' }}</td>
+                                    <td>{{ equip.return_time || '-' }}</td>
+                                    <td>{{ equip.returned_by || '-' }}</td>
+                                    <td>{{ equip.notes || '-' }}</td>
+                                    <td>
+                                        <button @click="confirmDeleteEquipment(equip.id)">حذف</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
-                    <div class="form-group">
-                        <label for="newUsername">نام کاربری</label>
-                        <input type="text" id="newUsername" v-model="newUser.username">
-                    </div>
-                    <div class="form-group">
-                        <label for="newPassword">رمز عبور</label>
-                        <input type="password" id="newPassword" v-model="newUser.password">
-                    </div>
-                    <div class="form-group">
-                        <label for="accessLevel">سطح دسترسی</label>
-                        <select id="accessLevel" v-model="newUser.isAdmin">
-                            <option :value="true">ادمین</option>
-                            <option :value="false">کاربر عادی</option>
-                        </select>
-                    </div>
-                    <button class="gray" @click="addUser">افزودن کاربر</button>
-                </div>
-
-                <div v-if="managementSection === 'bulkItems'">
-                    <h4>افزودن لیست کالا</h4>
-                    <div class="form-group">
-                        <textarea placeholder="لیست کالاها (فرمت: نام کالا,واحد)" v-model="bulkItems"></textarea>
-                    </div>
-                    <button class="gray" @click="addBulkItems">ذخیره</button>
                 </div>
             </div>
         </div>
 
         <div style="text-align: center; margin-top: 20px; color: var(--primary-color); font-size: 0.9rem;">
-            طراحی و پیاده‌سازی توسط واحد ساختمان و تاسیسات صدا و سیمای خراسان جنوبی - اسفند ۱۴۰۳
+            طراحی و پیاده‌سازی توسط Hamed Foodaji - اسفند ۱۴۰۳
         </div>
     </div>
 
     <script src="https://unpkg.com/vue@3.4.21/dist/vue.global.js"></script>
-    <script src="script.js"></script>
     <script>
+        // Disable console logs in production
+        if (window.location.hostname !== 'localhost' && window.location.protocol !== 'file:') {
+            console.log = function() {};
+            console.debug = function() {};
+            console.info = function() {};
+            // console.warn = function() {}; // Keep warnings for development
+            // console.error = function() {}; // Keep errors for development
+        }
+
+        // تابع تبدیل میلادی به شمسی (کپی از jalaali-js) - ارائه شده توسط کاربر
+        function toJalaali(gy, gm, gd) {
+            const g_d_m = [0,31,59,90,120,151,181,212,243,273,304,334];
+            let jy = (gy <= 1600) ? 0 : 979;
+            gy -= (gy <= 1600) ? 621 : 1600;
+
+            const gy2 = (gm > 2) ? gy + 1 : gy;
+            let days = (365 * gy) + Math.floor((gy2 + 3) / 4) - Math.floor((gy2 + 99) / 100)
+                       + Math.floor((gy2 + 399) / 400) - 80 + gd + g_d_m[gm - 1];
+
+            jy += 33 * Math.floor(days / 12053);
+            days %= 12053;
+            jy += 4 * Math.floor(days / 1461);
+            days %= 1461;
+            if (days > 365) {
+                jy += Math.floor((days - 1) / 365);
+                days = (days - 1) % 365;
+            }
+
+            const jm = (days < 186) ? 1 + Math.floor(days / 31) : 7 + Math.floor((days - 186) / 30);
+            const jd = 1 + ((days < 186) ? (days % 31) : ((days - 186) % 30));
+
+            return { jy, jm, jd };
+        }
+
+        // Helper function to format a Date object to 'yyyy/mm/dd' Gregorian string
+        function formatToGregorianYYYYMMDD(date) {
+            if (!(date instanceof Date) || isNaN(date)) {
+                 date = new Date();
+            }
+            const Adele = date.getFullYear();
+            const mm = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
+            const dd = String(date.getDate()).padStart(2, '0');
+            return `${Adele}/${mm}/${dd}`;
+        }
+
+
         const { createApp } = Vue;
+
+        const SUPABASE_URL = 'https://svhwuthuizqfihripqcb.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN2aHd1dGh1aXpxZmlocmlwcWNiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDMwNjU2ODksImV4cCI6MjA1ODY0MTY4OX0.vR9FcSNdFwiOhkYYL0JXndzTXABLlQWZNbk4_uaxXK4';
+
+        async function fetchData() {
+            try {
+                const [usersRes, itemsRes, transactionsRes, equipmentRes] = await Promise.all([
+                    fetch(`${SUPABASE_URL}/rest/v1/users?select=*`, {
+                        headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+                    }),
+                    fetch(`${SUPABASE_URL}/rest/v1/items?select=*`, {
+                        headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+                    }),
+                    fetch(`${SUPABASE_URL}/rest/v1/transactions?select=*`, {
+                        headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+                    }),
+                    fetch(`${SUPABASE_URL}/rest/v1/equipment?select=*`, {
+                        headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+                    })
+                ]);
+
+                if (!usersRes.ok || !itemsRes.ok || !transactionsRes.ok || !equipmentRes.ok) {
+                    const errorMessages = [];
+                    if (!usersRes.ok) errorMessages.push(`Users: ${usersRes.status} ${await usersRes.text()}`);
+                    if (!itemsRes.ok) errorMessages.push(`Items: ${itemsRes.status} ${await itemsRes.text()}`);
+                    if (!transactionsRes.ok) errorMessages.push(`Transactions: ${transactionsRes.status} ${await transactionsRes.text()}`);
+                    if (!equipmentRes.ok) errorMessages.push(`Equipment: ${equipmentRes.status} ${await equipmentRes.text()}`);
+                    throw new Error('خطا در دریافت داده‌ها از Supabase:\n' + errorMessages.join('\n'));
+                }
+
+                const users = await usersRes.json();
+                const items = await itemsRes.json();
+                const transactions = await transactionsRes.json();
+                const equipment = await equipmentRes.json();
+
+                return { users, items, transactions, equipment };
+            } catch (error) {
+                console.error('خطا در fetchData:', error);
+                throw error;
+            }
+        }
+
+        async function updateData(table, data, method = 'POST') {
+            let url = `${SUPABASE_URL}/rest/v1/${table}`;
+            if (method === 'PATCH' && data.id) {
+                url += `?id=eq.${data.id}`;
+            } else if (method === 'DELETE' && data.id) {
+                 url += `?id=eq.${data.id}`;
+            }
+
+            const fetchOptions = {
+                method,
+                headers: {
+                    'apikey': SUPABASE_KEY,
+                    'Authorization': `Bearer ${SUPABASE_KEY}`,
+                    'Content-Type': 'application/json',
+                    'Prefer': method === 'POST' ? 'return=representation' : (method === 'PATCH' ? 'return=representation' : '')
+                }
+            };
+
+            if (method !== 'DELETE') {
+                fetchOptions.body = JSON.stringify(data);
+            }
+
+            try {
+                const response = await fetch(url, fetchOptions);
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error(`Supabase error response for ${table} (${method}):`, errorText);
+                    throw new Error(`خطا در درخواست به Supabase (${table} - ${method}): ${response.status} - ${errorText}`);
+                }
+                let result = null;
+                if (response.status !== 204 && response.headers.get("content-type")?.includes("application/json")) {
+                    result = await response.json();
+                }
+                return result;
+            } catch (error) {
+                console.error(`خطا در ذخیره/به‌روزرسانی داده در جدول ${table}:`, error);
+                throw error;
+            }
+        }
+
+        function getShamsiDate(dateString = null) {
+            const date = dateString ? new Date(dateString) : new Date();
+            const parts = new Intl.DateTimeFormat('fa-IR-u-ca-persian', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit'
+            }).formatToParts(date);
+
+            let year = '', month = '', day = '';
+            parts.forEach(part => {
+                if (part.type === 'year') year = part.value;
+                if (part.type === 'month') month = part.value;
+                if (part.type === 'day') day = part.value;
+            });
+
+            return `${year}/${month}/${day}`;
+        }
+
+        function getCurrentShamsiMonth() {
+            const parts = new Intl.DateTimeFormat('fa-IR-u-ca-persian', {
+                month: 'numeric'
+            }).formatToParts(new Date());
+
+            return parseInt(parts.find(p => p.type === 'month').value);
+        }
+
+        function getCurrentShamsiYear() {
+            const parts = new Intl.DateTimeFormat('fa-IR-u-ca-persian', {
+                year: 'numeric'
+            }).formatToParts(new Date());
+
+            return parseInt(parts.find(p => p.type === 'year').value);
+        }
+
 
         createApp({
             data() {
@@ -1006,14 +1465,16 @@
                     items: [],
                     users: [],
                     transactions: [],
+                    equipment: [],
                     activeSection: '',
                     managementSection: '',
                     managementAccess: false,
                     managementPassword: '',
-                    newItem: { name: '', quantity: '', unit: '', warehouse: 'انبار داخل واحد', description: '' },
-                    withdrawItem: { name: '', quantity: '', unit: '', location: '', warehouse: '' },
+                    newItem: { name: '', quantity: '', unit: '', warehouse: 'انبار داخل واحد', description: '', initialQuantity: 0, location: '' },
+                    withdrawItem: { name: '', quantity: '', unit: '', location: '', warehouse: '', destinationWarehouse: 'انبار داخل واحد' },
+                    isTransfer: false,
                     filteredItems: [],
-                    newUser: { name: '', username: '', password: '', isAdmin: false },
+                    newUser: { name: '', username: '', password: '', isadmin: false },
                     bulkItems: '',
                     showSuccessMessage: false,
                     withdrawSuccessMessage: false,
@@ -1029,16 +1490,20 @@
                     lastActivityTime: null,
                     inactivityTimeout: null,
                     loginTime: null,
-                    dailyLoginCount: {},
-                    dailyActivityTime: {},
-                    lastLoginDate: null,
-                    hideZeroStock: true
+                    hideZeroStock: true,
+                    selectedItems: [],
+                    selectAll: false,
+                    printPages: [],
+                    pageSize: 'a4',
+                    newEquipment: { name: '', recipient: '', notes: '' },
+                    equipmentSuccessMessage: false,
+                    showEquipmentAlert: false,
+                    equipmentAlertMessage: ''
                 };
             },
             mounted() {
                 this.initializeData();
                 this.startInactivityTimer();
-                this.startActivityTracking();
                 window.addEventListener('mousemove', this.updateLastActivity);
                 window.addEventListener('keydown', this.updateLastActivity);
                 window.addEventListener('click', this.updateLastActivity);
@@ -1048,7 +1513,6 @@
                 window.removeEventListener('keydown', this.updateLastActivity);
                 window.removeEventListener('click', this.updateLastActivity);
                 clearInterval(this.inactivityTimeout);
-                clearInterval(this.activityInterval);
             },
             computed: {
                 allTransactions() {
@@ -1057,16 +1521,21 @@
                             date: t.date,
                             time: t.time,
                             type: t.type || 'برداشت',
-                            item: t.item,
+                            item_name: t.item_name,
                             quantity: t.quantity,
                             user: t.user,
                             warehouse: t.warehouse || '-',
                             location: t.location || '-'
                         }))
                         .sort((a, b) => {
-                            const dateA = new Date(`${a.date} ${a.time}`);
-                            const dateB = new Date(`${b.date} ${b.time}`);
-                            return dateB - dateA;
+                            const dateStrA = a.date && a.time ? `${a.date.replace(/\//g, '-')}T${a.time}` : null;
+                            const dateStrB = b.date && b.time ? `${b.date.replace(/\//g, '-')}T${b.time}` : null;
+                            try {
+                                const dateA = dateStrA ? new Date(dateStrA) : new Date(0);
+                                const dateB = dateStrB ? new Date(dateStrB) : new Date(0);
+                                if (isNaN(dateA) || isNaN(dateB)) return 0; // Handle invalid dates
+                                return dateB - dateA;
+                            } catch (e) { return 0; }
                         });
                 },
                 groupedItems() {
@@ -1084,17 +1553,17 @@
                                 ids: []
                             };
                         }
+                        const currentQuantity = parseFloat(item.quantity);
+                        if (isNaN(currentQuantity)) return; // Skip if quantity is not a number
+
                         const warehouseEntry = grouped[key].warehouses.find(wh => wh.name === item.warehouse);
                         if (warehouseEntry) {
-                            warehouseEntry.quantity += item.quantity;
+                            warehouseEntry.quantity += currentQuantity;
                         } else {
-                            grouped[key].warehouses.push({
-                                name: item.warehouse,
-                                quantity: item.quantity
-                            });
+                            grouped[key].warehouses.push({ name: item.warehouse, quantity: currentQuantity });
                         }
-                        grouped[key].totalQuantity += item.quantity;
-                        grouped[key].ids.push(item.id);
+                        grouped[key].totalQuantity += currentQuantity;
+                        if(item.id) grouped[key].ids.push(item.id);
                     });
                     return Object.values(grouped)
                         .map(item => ({
@@ -1106,7 +1575,7 @@
                 filteredGroupedItems() {
                     let filtered = this.groupedItems;
                     if (this.searchQuery) {
-                        filtered = filtered.filter(item => 
+                        filtered = filtered.filter(item =>
                             item.name.toLowerCase().includes(this.searchQuery.toLowerCase())
                         );
                     }
@@ -1122,145 +1591,332 @@
                             date: t.date,
                             time: t.time,
                             type: t.type || 'برداشت',
-                            item: t.item,
+                            item_name: t.item_name,
                             quantity: t.quantity,
-                            warehouse: t.warehouse || '-'
+                            warehouse: t.warehouse || '-',
+                            location: t.location || '-'
                         }))
-                        .sort((a, b) => new Date(`${b.date} ${b.time}`) - new Date(`${a.date} ${a.time}`));
+                        .sort((a, b) => {
+                            const dateStrA = a.date && a.time ? `${a.date.replace(/\//g, '-')}T${a.time}` : null;
+                            const dateStrB = b.date && b.time ? `${b.date.replace(/\//g, '-')}T${b.time}` : null;
+                            try {
+                                const dateA = dateStrA ? new Date(dateStrA) : new Date(0);
+                                const dateB = dateStrB ? new Date(dateStrB) : new Date(0);
+                                if (isNaN(dateA) || isNaN(dateB)) return 0;
+                                return dateB - dateA;
+                            } catch (e) { return 0; }
+                        });
                 },
                 filteredUsers() {
                     return this.users
                         .filter(user => user.username !== 'user' && user.username !== 'admin')
                         .map(user => ({
                             ...user,
-                            score: user.totalScore
+                            score: user.totalScore || 0,
+                            monthlyScore: this.calculateMonthlyScore(user.id)
                         }))
                         .sort((a, b) => b.score - a.score);
+                },
+                filteredEquipmentList() {
+                    const now = new Date();
+                    return this.equipment
+                         .filter(equip => {
+                            // Keep items that are not returned, OR items returned within the last 240 hours
+                            if (equip.status !== 'returned') {
+                                return true;
+                            } else {
+                                // Check if returned within the last 240 hours
+                                if (!equip.return_date || !equip.return_time) {
+                                    return false; // Cannot check time difference without return date/time
+                                }
+                                try {
+                                    // Parse the Gregorian return date (assuming YYYY/MM/DD format)
+                                    const [year, month, day] = equip.return_date.split('/').map(Number);
+                                    const timeParts = equip.return_time.split(':').map(Number);
+
+                                     if ([year, month, day].some(isNaN) || timeParts.some(isNaN) || timeParts.length < 2) {
+                                        console.warn(`Invalid date/time format for returned equipment ID ${equip.id}: D=${equip.return_date} T=${equip.return_time}`);
+                                        return false; // Skip if date or time is invalid
+                                    }
+                                    const hours = timeParts[0];
+                                    const minutes = timeParts[1];
+                                    const seconds = timeParts.length > 2 ? timeParts[2] : 0;
+
+
+                                    const returnDateTime = new Date(year, month - 1, day, hours, minutes, seconds);
+
+                                    if (isNaN(returnDateTime.getTime())) {
+                                        console.warn(`Could not construct valid date for returned equipment ID ${equip.id}`);
+                                        return false; // Skip if date is invalid
+                                    }
+
+                                    const diffMillis = now - returnDateTime;
+                                    const diffHours = diffMillis / (1000 * 60 * 60);
+
+                                    // console.log(`DEBUG: Equip ID ${equip.id}, Item: ${equip.item_name}, Returned: ${returnDateTime.toLocaleString()}, Now: ${now.toLocaleString()}, DiffHours: ${diffHours.toFixed(2)}`);
+
+                                    return diffHours <= 240; // Keep if returned within the last 5 hours
+                                } catch (e) {
+                                    console.error('Error in filtering returned equipment by time:', e, equip);
+                                    return false; // Exclude if there's an error in date parsing/calculation
+                                }
+                            }
+                        })
+                        .sort((a, b) => {
+                            try {
+                                // Sort by delivery date/time, with non-returned items first
+                                const dateA = a.delivery_date && a.delivery_time ? new Date(`${a.delivery_date.replace(/\//g, '-')}T${a.delivery_time}`) : new Date(0);
+                                const dateB = b.delivery_date && b.delivery_time ? new Date(`${b.delivery_date.replace(/\//g, '-')}T${b.delivery_time}`) : new Date(0);
+
+                                if (a.status !== 'returned' && b.status === 'returned') return -1;
+                                if (a.status === 'returned' && b.status !== 'returned') return 1;
+                                if (isNaN(dateA) || isNaN(dateB)) return 0;
+                                return dateB - dateA;
+                            } catch (e) { return 0; }
+                        });
+                },
+                allEquipmentHistory() {
+                    return this.equipment
+                        .sort((a, b) => {
+                            try {
+                                const dateA = new Date(a.delivery_date.replace(/\//g, '-'));
+                                const dateB = new Date(b.delivery_date.replace(/\//g, '-'));
+                                if (isNaN(dateA) || isNaN(dateB)) return 0;
+                                return dateB - dateA;
+                            } catch (e) { return 0; }
+                        });
                 }
             },
             methods: {
+                formatGregorianToShamsiForDisplay(gregorianDateStr) {
+                    if (!gregorianDateStr || typeof gregorianDateStr !== 'string' || !gregorianDateStr.includes('/')) {
+                        return '-';
+                    }
+                    const parts = gregorianDateStr.split('/');
+                    if (parts.length !== 3) return gregorianDateStr;
+
+                    const gy = parseInt(parts[0], 10);
+                    const gm = parseInt(parts[1], 10);
+                    const gd = parseInt(parts[2], 10);
+
+                    if (isNaN(gy) || isNaN(gm) || isNaN(gd) || gm < 1 || gm > 12 || gd < 1 || gd > 31) {
+                        return gregorianDateStr;
+                    }
+
+                    try {
+                        const { jy, jm, jd } = toJalaali(gy, gm, gd);
+                        const p = n => n.toString().padStart(2, '0');
+                        return `${jy}/${p(jm)}/${p(jd)}`;
+                    } catch (e) {
+                        console.error("Error converting Gregorian to Shamsi:", e, gregorianDateStr);
+                        return gregorianDateStr;
+                    }
+                },
+                calculateMonthlyScore(userId) {
+                    const currentShamsiMonth = getCurrentShamsiMonth();
+                    const currentShamsiYear = getCurrentShamsiYear();
+                    let score = 0;
+
+                    this.transactions.forEach(t => {
+                        try {
+                            // Ensure user_id is present on transaction or use t.user name to find ID if schema is different
+                            let transactionUserId = t.user_id;
+                            if (!transactionUserId && t.user) { // If user_id is not directly on transaction, find it from users list
+                                const transactionUserObject = this.users.find(u => u.name === t.user);
+                                if (transactionUserObject) transactionUserId = transactionUserObject.id;
+                            }
+
+                            if (transactionUserId === userId && t.date) {
+                                const [gy, gm, gd] = t.date.split('/').map(Number);
+                                if ([gy,gm,gd].some(isNaN)) return;
+                                const { jy, jm } = toJalaali(gy, gm, gd);
+                                if (jm === currentShamsiMonth && jy === currentShamsiYear) {
+                                    score += 5;
+                                }
+                            }
+                        } catch (e) { /* ignore date parse error for this calculation */ }
+                    });
+
+                    this.equipment.forEach(e => {
+                        try {
+                            if (e.user_id === userId && e.delivery_date) {
+                                const [gy, gm, gd] = e.delivery_date.split('/').map(Number);
+                                if ([gy,gm,gd].some(isNaN)) return;
+                                const { jy, jm } = toJalaali(gy, gm, gd);
+                                if (jm === currentShamsiMonth && jy === currentShamsiYear) {
+                                    score += 10;
+                                }
+                            }
+                        } catch (e) { /* ignore date parse error */ }
+                    });
+                    return score;
+                },
                 async initializeData() {
                     this.isLoading = true;
                     try {
                         const data = await fetchData();
-                        this.users = data.record.users || [];
-                        this.items = data.record.items || [];
-                        this.transactions = data.record.transactions || [];
+                        this.users = data.users || [];
+                        this.items = data.items || [];
+                        this.transactions = data.transactions || [];
+                        this.equipment = data.equipment || [];
                         this.users.forEach(user => {
-                            user.loginCount = user.loginCount || 0;
-                            user.totalActivityTime = user.totalActivityTime || 0;
-                            user.dailyLoginCount = user.dailyLoginCount || {};
-                            user.dailyActivityTime = user.dailyActivityTime || {};
-                            user.lastLoginDate = user.lastLoginDate || null;
-                            user.totalScore = user.totalScore || 0;
+                            if(user.totalScore === undefined) user.totalScore = 0;
                         });
+
+                        if (this.loggedIn && this.currentUser) {
+                            this.checkOverdueEquipment(); // Check after data is loaded
+                        }
                     } catch (error) {
-                        console.error('خطا در دریافت داده‌ها:', error);
+                        alert('خطایی در بارگذاری داده‌های اولیه رخ داد. لطفاً صفحه را رفرش کنید یا با پشتیبانی تماس بگیرید.');
                     }
                     this.isLoading = false;
                 },
+                async checkOverdueEquipment() {
+                    if (!this.currentUser || !this.equipment || this.equipment.length === 0) {
+                        this.showEquipmentAlert = false;
+                        return;
+                    }
+                    const overdueEquipment = this.equipment.filter(equip => {
+                        if (equip.status === 'returned' || equip.delivered_by !== this.currentUser.name) {
+                            return false;
+                        }
+                        try {
+                            if (!equip.delivery_date || !equip.delivery_time) {
+                                console.warn(`Equipment ID ${equip.id} missing delivery_date or delivery_time.`);
+                                return false;
+                            }
+
+                            const [year, month, day] = equip.delivery_date.split('/').map(Number);
+                            const timeParts = equip.delivery_time.split(':').map(Number);
+
+                            if ([year, month, day].some(isNaN) || timeParts.some(isNaN) || timeParts.length < 2) {
+                                console.warn(`Invalid date/time format for equipment ID ${equip.id}: D=${equip.delivery_date} T=${equip.delivery_time}`);
+                                return false;
+                            }
+                            const hours = timeParts[0];
+                            const minutes = timeParts[1];
+                            const seconds = timeParts.length > 2 ? timeParts[2] : 0;
+
+                            const deliveryDateTime = new Date(year, month - 1, day, hours, minutes, seconds);
+                            if (isNaN(deliveryDateTime.getTime())) {
+                                 console.warn(`Could not construct valid date for equipment ID ${equip.id}`);
+                                 return false;
+                            }
+
+                            const now = new Date();
+                            const diffMillis = now - deliveryDateTime;
+                            const diffHours = diffMillis / (1000 * 60 * 60);
+
+                            // console.log(`DEBUG: Equip ID ${equip.id}, Item: ${equip.item_name}, Delivered: ${deliveryDateTime.toLocaleString()}, Now: ${now.toLocaleString()}, DiffHours: ${diffHours.toFixed(2)}`);
+                            return diffHours > 72;
+                        } catch (e) {
+                            console.error('Error in checkOverdueEquipment for equip ID', equip.id, e);
+                            return false;
+                        }
+                    });
+
+                    if (overdueEquipment.length > 0) {
+                        const alertMessages = overdueEquipment.map(e => {
+                            return `تحویل '${e.item_name}' به ${e.recipient}`;
+                        });
+                        const combinedAlerts = alertMessages.join(' و همچنین ');
+                        this.equipmentAlertMessage = `${this.currentUser.name} عزیز! از زمان ${combinedAlerts} بیش از سه روز گذشته است. لطفاً در خصوص برگشت آنها پیگیری لازم را انجام دهید.`;
+                        this.showEquipmentAlert = true;
+                    } else {
+                        this.showEquipmentAlert = false;
+                    }
+                },
+                dismissEquipmentAlert() {
+                    this.showEquipmentAlert = false;
+                },
                 async login() {
                     this.isLoading = true;
-                    await new Promise(resolve => setTimeout(resolve, 1000));
-                    const user = this.users.find(u => 
-                        u.username === this.username && 
-                        u.password === this.password
+                    const user = this.users.find(u =>
+                        u.username === this.username && u.password === this.password
                     );
                     if (user) {
                         this.loggedIn = true;
-                        this.currentUser = user;
+                        this.currentUser = { ...user };
                         this.loginTime = Date.now();
-                        this.updateLoginScore(user);
-                        await updateData({ users: this.users, items: this.items, transactions: this.transactions });
+
+                        const todayShamsi = getShamsiDate();
+                        if (this.currentUser.totalScore === undefined) this.currentUser.totalScore = 0;
+                        this.currentUser.totalLoginCount = (this.currentUser.totalLoginCount || 0) + 1;
+                        this.currentUser.lastLoginDate = todayShamsi;
+                        this.currentUser.totalScore += 1;
+
+                        try {
+                            await this.updateUserData(this.currentUser);
+                        } catch (e) {
+                            console.warn("Could not update user data on login:", e);
+                        }
+                        // Call initializeData AFTER login success and potential user data update
+                        // to ensure all subsequent data (like equipment for checkOverdueEquipment) is fresh
+                        await this.initializeData();
                         this.username = '';
                         this.password = '';
                     } else {
-                        alert('اطلاعات ورود نادرست است.');
+                        alert('نام کاربری یا رمز عبور نادرست است.');
                     }
                     this.isLoading = false;
                 },
                 async logout() {
-                    if (this.loginTime) {
-                        const activityTime = Date.now() - this.loginTime;
-                        this.updateActivityScore(this.currentUser, activityTime);
-                        await updateData({ users: this.users, items: this.items, transactions: this.transactions });
+                    if (this.loginTime && this.currentUser) {
+                        const activityTimeMillis = Date.now() - this.loginTime;
+                        const minutesActive = Math.min(Math.floor(activityTimeMillis / 60000), 90);
+                        if (this.currentUser.totalScore === undefined) this.currentUser.totalScore = 0;
+                        this.currentUser.totalScore += Math.floor(minutesActive / 5);
+
+                        try {
+                           await this.updateUserData(this.currentUser);
+                        } catch(e) {
+                            console.warn("Could not update user data on logout:", e);
+                        }
                     }
                     this.loggedIn = false;
                     this.currentUser = null;
                     this.loginTime = null;
+                    this.activeSection = ''; // Go to default view
+                    this.showEquipmentAlert = false; // Hide alert on logout
                     clearInterval(this.inactivityTimeout);
-                    clearInterval(this.activityInterval);
                 },
                 startInactivityTimer() {
                     this.lastActivityTime = Date.now();
                     this.inactivityTimeout = setInterval(() => {
                         const now = Date.now();
-                        if (this.loggedIn && (now - this.lastActivityTime) >= 600000) {
+                        if (this.loggedIn && (now - this.lastActivityTime) >= 600000) { // 10 minutes
                             this.logout();
                             alert('به دلیل عدم فعالیت به مدت 10 دقیقه، از سیستم خارج شدید.');
-                            clearInterval(this.inactivityTimeout);
                         }
-                    }, 1000);
+                    }, 60000);
                 },
                 updateLastActivity() {
                     this.lastActivityTime = Date.now();
                 },
-                startActivityTracking() {
-                    this.activityInterval = setInterval(() => {
-                        if (this.loggedIn && this.loginTime) {
-                            const now = Date.now();
-                            const elapsed = now - this.lastActivityTime;
-                            if (elapsed < 60000) {
-                                const activityTime = now - this.loginTime;
-                                this.updateActivityScore(this.currentUser, activityTime);
-                            }
-                        }
-                    }, 300000);
-                },
-                updateLoginScore(user) {
-                    const today = new Date().toLocaleDateString('fa-IR');
-                    if (user.lastLoginDate !== today) {
-                        user.dailyLoginCount[today] = 0;
-                        user.dailyActivityTime[today] = 0;
-                        user.lastLoginDate = today;
+                async updateUserData(userData) {
+                    const dataToUpdate = {
+                        id: userData.id,
+                        name: userData.name,
+                        username: userData.username,
+                        isadmin: userData.isadmin,
+                        totalScore: userData.totalScore || 0,
+                        lastLoginDate: userData.lastLoginDate
+                    };
+                     if (userData.password && userData.password.length > 0 && userData.password !== this.users.find(u=>u.id === userData.id)?.password) {
+                        dataToUpdate.password = userData.password;
                     }
-                    user.dailyLoginCount[today] = (user.dailyLoginCount[today] || 0) + 1;
-                    user.loginCount = (user.loginCount || 0) + 1;
-                    this.calculateScore(user);
-                },
-                updateActivityScore(user, totalTime) {
-                    const today = new Date().toLocaleDateString('fa-IR');
-                    if (user.lastLoginDate !== today) {
-                        user.dailyLoginCount[today] = 0;
-                        user.dailyActivityTime[today] = 0;
-                        user.lastLoginDate = today;
-                    }
-                    const minutes = Math.min(Math.floor(totalTime / 60000), 90);
-                    user.dailyActivityTime[today] = minutes;
-                    user.totalActivityTime = (user.totalActivityTime || 0) + totalTime;
-                    this.calculateScore(user);
-                },
-                calculateScore(user) {
-                    const today = new Date().toLocaleDateString('fa-IR');
-                    const dailyLoginScore = Math.min((user.dailyLoginCount[today] || 0), 10);
-                    const dailyActivityMinutes = Math.min((user.dailyActivityTime[today] || 0), 90);
-                    const dailyActivityScore = Math.floor(dailyActivityMinutes / 5);
-                    const dailyScore = dailyLoginScore + dailyActivityScore;
-
-                    if (!user.lastDailyScoreDate || user.lastDailyScoreDate !== today) {
-                        user.totalScore = (user.totalScore || 0) + dailyScore;
-                        user.lastDailyScoreDate = today;
-                    } else {
-                        const previousDailyScore = user.lastDailyScore || 0;
-                        user.totalScore = user.totalScore - previousDailyScore + dailyScore;
-                    }
-                    user.lastDailyScore = dailyScore;
-                    return user.totalScore;
+                    await updateData('users', dataToUpdate, 'PATCH');
                 },
                 showSection(section) {
                     this.activeSection = section;
                     this.managementSection = '';
+                    this.profileSection = '';
                     this.withdrawSuccessMessage = false;
+                    this.equipmentSuccessMessage = false;
+                    this.showSuccessMessage = false;
+                    this.selectedItems = [];
+                    this.selectAll = false;
+                    this.isTransfer = false;
                 },
                 showManagementSection(section) {
                     this.managementSection = section;
@@ -1276,23 +1932,23 @@
                     this.profileSection = section;
                     this.profileMenuOpen = false;
                 },
-                               searchItems() {
+                searchItems() {
+                    if (!this.newItem.name.trim()) {
+                        this.filteredItems = [];
+                        return;
+                    }
                     this.filteredItems = this.groupedItems
                         .filter(item => item.name.toLowerCase().includes(this.newItem.name.toLowerCase()))
-                        .map(item => ({
-                            id: item.name,
-                            name: item.name,
-                            unit: item.unit
-                        }));
+                        .map(item => ({ name: item.name, unit: item.unit, description: item.description }));
                 },
                 searchWithdrawItems() {
+                     if (!this.withdrawItem.name.trim()) {
+                        this.filteredItems = [];
+                        return;
+                    }
                     this.filteredItems = this.groupedItems
-                        .filter(item => item.name.toLowerCase().includes(this.withdrawItem.name.toLowerCase()))
-                        .map(item => ({
-                            id: item.name,
-                            name: item.name,
-                            unit: item.unit
-                        }));
+                        .filter(item => item.name.toLowerCase().includes(this.withdrawItem.name.toLowerCase()) && item.totalQuantity > 0)
+                        .map(item => ({ name: item.name, unit: item.unit, description: item.description }));
                 },
                 selectItem(item) {
                     this.newItem.name = item.name;
@@ -1305,150 +1961,288 @@
                         alert('لطفا تمام فیلدهای اجباری را پر کنید');
                         return;
                     }
-                    this.isSubmitting = true;
-                    const existingItem = this.items.find(i => 
-                        i.name === this.newItem.name && 
-                        i.warehouse === this.newItem.warehouse && 
-                        i.description === this.newItem.description
-                    );
-                    const now = new Date();
-                    const quantityToAdd = parseInt(this.newItem.quantity);
-                    if (existingItem) {
-                        existingItem.quantity += quantityToAdd;
-                        this.transactions.unshift({
-                            item: this.newItem.name,
-                            quantity: quantityToAdd,
-                            user: this.currentUser.name,
-                            location: '-',
-                            date: now.toLocaleDateString('fa-IR'),
-                            time: now.toLocaleTimeString('fa-IR'),
-                            warehouse: this.newItem.warehouse,
-                            type: 'افزودن'
-                        });
-                    } else {
-                        this.items.push({
-                            id: Date.now(),
-                            ...this.newItem,
-                            quantity: quantityToAdd,
-                            initialQuantity: quantityToAdd,
-                            user: this.currentUser.name,
-                            date: now.toLocaleDateString('fa-IR'),
-                            time: now.toLocaleTimeString('fa-IR')
-                        });
-                        this.transactions.unshift({
-                            item: this.newItem.name,
-                            quantity: quantityToAdd,
-                            user: this.currentUser.name,
-                            location: '-',
-                            date: now.toLocaleDateString('fa-IR'),
-                            time: now.toLocaleTimeString('fa-IR'),
-                            warehouse: this.newItem.warehouse,
-                            type: 'افزودن'
-                        });
+                    if (isNaN(parseFloat(this.newItem.quantity)) || parseFloat(this.newItem.quantity) <= 0) {
+                        alert('مقدار کالا باید یک عدد مثبت باشد.');
+                        return;
                     }
-                    await updateData({ users: this.users, items: this.items, transactions: this.transactions });
-                    this.showSuccessMessage = true;
-                    setTimeout(() => {
-                        this.showSuccessMessage = false;
+                    this.isSubmitting = true;
+                    try {
+                        const now = new Date();
+                        const quantityToAdd = parseFloat(this.newItem.quantity);
+                        const gregorianDateForDB = formatToGregorianYYYYMMDD(now);
+                        const timeForDB = now.toLocaleTimeString('en-US', { hour12: false });
+
+                        let existingItemInWarehouse = this.items.find(i =>
+                            i.name === this.newItem.name &&
+                            i.unit === this.newItem.unit &&
+                            (i.description || '') === (this.newItem.description || '') &&
+                            i.warehouse === this.newItem.warehouse
+                        );
+
+                        if (existingItemInWarehouse) {
+                            const newQuantity = (parseFloat(existingItemInWarehouse.quantity) || 0) + quantityToAdd;
+                            await updateData('items', {
+                                id: existingItemInWarehouse.id,
+                                quantity: newQuantity
+                            }, 'PATCH');
+                        } else {
+                            const itemForDB = {
+                                name: this.newItem.name,
+                                quantity: quantityToAdd,
+                                unit: this.newItem.unit,
+                                warehouse: this.newItem.warehouse,
+                                description: this.newItem.description || '',
+                                user: this.currentUser.name,
+                                date: gregorianDateForDB,
+                                time: timeForDB
+                            };
+                            await updateData('items', itemForDB);
+                        }
+                        const transaction = {
+                            item_name: this.newItem.name,
+                            quantity: quantityToAdd,
+                            user: this.currentUser.name,
+                            location: `افزوده شده به ${this.newItem.warehouse}`,
+                            date: gregorianDateForDB,
+                            time: timeForDB,
+                            warehouse: this.newItem.warehouse,
+                            type: 'افزودن'
+                        };
+                        await updateData('transactions', transaction);
+
+                        this.showSuccessMessage = true;
+                        setTimeout(() => this.showSuccessMessage = false, 2000);
+                        this.newItem = { name: '', quantity: '', unit: '', warehouse: 'انبار داخل واحد', description: ''};
+                        await this.initializeData();
+                    } catch (error) {
+                        alert('خطایی در ثبت کالا رخ داد: ' + error.message);
+                    } finally {
                         this.isSubmitting = false;
-                    }, 1000);
-                    this.newItem = { name: '', quantity: '', unit: '', warehouse: 'انبار داخل واحد', description: '' };
+                    }
                 },
                 selectWithdrawItem(item) {
                     this.withdrawItem.name = item.name;
                     this.withdrawItem.unit = item.unit;
                     this.withdrawItem.description = item.description || '';
                     this.availableWarehouses = this.items
-                        .filter(i => i.name === item.name && i.quantity > 0 && i.description === item.description)
-                        .map(i => ({ name: i.warehouse, quantity: i.quantity, description: i.description }));
+                        .filter(i => i.name === item.name && i.unit === item.unit && (i.description || '') === (item.description || '') && parseFloat(i.quantity) > 0)
+                        .map(i => ({ name: i.warehouse, quantity: i.quantity, id: i.id }));
+                    if (this.availableWarehouses.length > 0) {
+                        this.withdrawItem.warehouse = this.availableWarehouses[0].name;
+                    } else {
+                        this.withdrawItem.warehouse = '';
+                    }
                     this.filteredItems = [];
                 },
                 async submitWithdraw() {
-                    if (!this.withdrawItem.name || !this.withdrawItem.quantity || !this.withdrawItem.unit || !this.withdrawItem.warehouse || !this.withdrawItem.location) {
-                        alert('لطفا تمام فیلدهای اجباری را پر کنید');
+                    if (!this.withdrawItem.name || !this.withdrawItem.quantity || !this.withdrawItem.unit || !this.withdrawItem.warehouse) {
+                        alert('لطفا تمام فیلدهای اجباری را پر کنید (نام، مقدار، واحد، انبار مبدا).');
                         return;
                     }
-                    const item = this.items.find(i => 
-                        i.name === this.withdrawItem.name && 
-                        i.warehouse === this.withdrawItem.warehouse && 
-                        i.description === this.withdrawItem.description
+                    if (isNaN(parseFloat(this.withdrawItem.quantity)) || parseFloat(this.withdrawItem.quantity) <= 0) {
+                        alert('مقدار برداشت باید یک عدد مثبت باشد.');
+                        return;
+                    }
+                    if (!this.isTransfer && !this.withdrawItem.location) {
+                        alert('لطفا محل استفاده را برای برداشت وارد کنید.');
+                        return;
+                    }
+                    if (this.isTransfer && (!this.withdrawItem.destinationWarehouse || this.withdrawItem.destinationWarehouse === this.withdrawItem.warehouse)) {
+                        alert('لطفا انبار مقصد معتبر و متفاوت از انبار مبدا را برای جابجایی انتخاب کنید.');
+                        return;
+                    }
+
+                    const quantityToWithdraw = parseFloat(this.withdrawItem.quantity);
+                    const sourceItemRecord = this.items.find(i =>
+                        i.name === this.withdrawItem.name &&
+                        i.unit === this.withdrawItem.unit &&
+                        (i.description || '') === (this.withdrawItem.description || '') &&
+                        i.warehouse === this.withdrawItem.warehouse
                     );
-                    if (!item || item.quantity < parseInt(this.withdrawItem.quantity)) {
-                        alert('موجودی کافی نیست');
+
+                    if (!sourceItemRecord || (parseFloat(sourceItemRecord.quantity) || 0) < quantityToWithdraw) {
+                        alert(`موجودی کالای "${this.withdrawItem.name}" در انبار "${this.withdrawItem.warehouse}" کافی نیست.`);
                         return;
                     }
+
                     this.isSubmitting = true;
-                    item.quantity -= parseInt(this.withdrawItem.quantity);
-                    const now = new Date();
-                    this.transactions.unshift({
-                        item: this.withdrawItem.name,
-                        quantity: parseInt(this.withdrawItem.quantity),
-                        user: this.currentUser.name,
-                        location: this.withdrawItem.location,
-                        date: now.toLocaleDateString('fa-IR'),
-                        time: now.toLocaleTimeString('fa-IR'),
-                        warehouse: this.withdrawItem.warehouse,
-                        type: 'برداشت'
-                    });
-                    if (item.quantity === 0 && item.description) {
-                        this.items = this.items.filter(i => i.id !== item.id);
-                    }
-                    await updateData({ users: this.users, items: this.items, transactions: this.transactions });
-                    this.withdrawItem = { name: '', quantity: '', unit: '', location: '', warehouse: '' };
-                    this.withdrawSuccessMessage = true;
-                    setTimeout(() => {
-                        this.withdrawSuccessMessage = false;
+                    try {
+                        const now = new Date();
+                        const gregorianDateForDB = formatToGregorianYYYYMMDD(now);
+                        const timeForDB = now.toLocaleTimeString('en-US', { hour12: false });
+
+                        const newSourceQuantity = (parseFloat(sourceItemRecord.quantity) || 0) - quantityToWithdraw;
+                        await updateData('items', { id: sourceItemRecord.id, quantity: newSourceQuantity }, 'PATCH');
+
+                        if (this.isTransfer) {
+                            let destinationItemRecord = this.items.find(i =>
+                                i.name === this.withdrawItem.name &&
+                                i.unit === this.withdrawItem.unit &&
+                                (i.description || '') === (this.withdrawItem.description || '') &&
+                                i.warehouse === this.withdrawItem.destinationWarehouse
+                            );
+                            if (destinationItemRecord) {
+                                const newDestQuantity = (parseFloat(destinationItemRecord.quantity) || 0) + quantityToWithdraw;
+                                await updateData('items', { id: destinationItemRecord.id, quantity: newDestQuantity }, 'PATCH');
+                            } else {
+                                const newItemInDest = {
+                                    name: this.withdrawItem.name,
+                                    quantity: quantityToWithdraw,
+                                    unit: this.withdrawItem.unit,
+                                    warehouse: this.withdrawItem.destinationWarehouse,
+                                    description: this.withdrawItem.description || '',
+                                    user: this.currentUser.name,
+                                    date: gregorianDateForDB,
+                                    time: timeForDB
+                                };
+                                await updateData('items', newItemInDest);
+                            }
+                        }
+
+                        const transaction = {
+                            item_name: this.withdrawItem.name,
+                            quantity: quantityToWithdraw,
+                            user: this.currentUser.name,
+                            location: this.isTransfer ? `انتقال از ${this.withdrawItem.warehouse} به ${this.withdrawItem.destinationWarehouse}` : this.withdrawItem.location,
+                            date: gregorianDateForDB,
+                            time: timeForDB,
+                            warehouse: this.withdrawItem.warehouse,
+                            type: this.isTransfer ? 'جابجایی' : 'برداشت'
+                        };
+                        await updateData('transactions', transaction);
+
+                        this.withdrawSuccessMessage = true;
+                        setTimeout(() => this.withdrawSuccessMessage = false, 2000);
+                        this.withdrawItem = { name: '', quantity: '', unit: '', location: '', warehouse: '', destinationWarehouse: 'انبار داخل واحد' };
+                        this.isTransfer = false;
+                        await this.initializeData();
+                    } catch (error) {
+                        alert('خطایی در عملیات برداشت/جابجایی رخ داد: ' + error.message);
+                    } finally {
                         this.isSubmitting = false;
-                    }, 1000);
+                    }
                 },
-                withdrawFromStock(item) {
-                    this.withdrawItem.name = item.name;
-                    this.withdrawItem.unit = item.unit;
-                    this.withdrawItem.description = item.description || '';
+                withdrawFromStock(itemGroup) {
+                    this.withdrawItem.name = itemGroup.name;
+                    this.withdrawItem.unit = itemGroup.unit;
+                    this.withdrawItem.description = itemGroup.description || '';
                     this.availableWarehouses = this.items
-                        .filter(i => i.name === item.name && i.description === item.description)
-                        .map(i => ({ name: i.warehouse, quantity: i.quantity, description: i.description }));
+                        .filter(i => i.name === itemGroup.name && i.unit === itemGroup.unit && (i.description || '') === (itemGroup.description || '') && parseFloat(i.quantity) > 0)
+                        .map(i => ({ name: i.warehouse, quantity: i.quantity, id: i.id }));
+                    if (this.availableWarehouses.length > 0) {
+                        this.withdrawItem.warehouse = this.availableWarehouses[0].name;
+                    } else {
+                        this.withdrawItem.warehouse = '';
+                        alert(`کالای ${itemGroup.name} در حال حاضر در هیچ انباری موجودی ندارد.`);
+                    }
                     this.activeSection = 'withdraw';
                 },
-                confirmDeleteItem(item) {
-                    if (confirm(`آیا از حذف کالای "${item.name}" مطمئن هستید؟`)) {
-                        this.deleteItem(item);
+                confirmDeleteItem(itemGroup) {
+                    if (confirm(`آیا از حذف کامل کالای "${itemGroup.name}" (با توضیحات: ${itemGroup.description || 'ندارد'}) از تمام انبارها مطمئن هستید؟ این عمل غیرقابل بازگشت است.`)) {
+                        this.deleteItemGroup(itemGroup);
                     }
                 },
-                async deleteItem(item) {
-                    this.items = this.items.filter(i => !item.ids.includes(i.id));
-                    await updateData({ users: this.users, items: this.items, transactions: this.transactions });
+                async deleteItemGroup(itemGroup) {
+                    this.isSubmitting = true;
+                    try {
+                        if (itemGroup.ids && itemGroup.ids.length > 0) {
+                             for (const id of itemGroup.ids) {
+                                await updateData('items', { id: id }, 'DELETE');
+                            }
+                        } else {
+                            const itemsToDelete = this.items.filter(i => i.name === itemGroup.name && (i.description || '') === (itemGroup.description || ''));
+                            for (const item of itemsToDelete) {
+                                await updateData('items', { id: item.id }, 'DELETE');
+                            }
+                        }
+                        await this.initializeData();
+                        alert(`کالای "${itemGroup.name}" با موفقیت از تمام انبارها حذف شد.`);
+                    } catch (error) {
+                        alert('خطایی در حذف گروه کالا رخ داد: ' + error.message);
+                    } finally {
+                        this.isSubmitting = false;
+                    }
+                },
+                confirmDeleteEquipment(equipId) {
+                    if (confirm('آیا از حذف این رکورد از تاریخچه تجهیزات مطمئن هستید؟ این عمل غیرقابل بازگشت است.')) {
+                        this.deleteEquipmentRecord(equipId);
+                    }
+                },
+                async deleteEquipmentRecord(equipId) {
+                    this.isSubmitting = true;
+                    try {
+                        await updateData('equipment', { id: equipId }, 'DELETE');
+                        await this.initializeData();
+                        alert('رکورد تجهیز با موفقیت حذف شد.');
+                    } catch (error) {
+                        alert('خطایی در حذف رکورد تجهیز رخ داد: ' + error.message);
+                    } finally {
+                        this.isSubmitting = false;
+                    }
                 },
                 confirmDeleteUser(userId) {
-                    if (confirm('آیا از حذف این کاربر مطمئن هستید؟')) {
+                    if (this.currentUser && this.currentUser.id === userId) {
+                        alert('شما نمی‌توانید حساب کاربری خود را حذف کنید.');
+                        return;
+                    }
+                    if (confirm('آیا از حذف این کاربر مطمئن هستید؟ این عمل غیرقابل بازگشت است.')) {
                         this.deleteUser(userId);
                     }
                 },
                 async deleteUser(userId) {
-                    this.users = this.users.filter(u => u.id !== userId);
-                    await updateData({ users: this.users, items: this.items, transactions: this.transactions });
+                    this.isSubmitting = true;
+                    try {
+                        await updateData('users', { id: userId }, 'DELETE');
+                        await this.initializeData();
+                        alert('کاربر با موفقیت حذف شد.');
+                    } catch (error) {
+                        alert('خطایی در حذف کاربر رخ داد: ' + error.message);
+                    } finally {
+                        this.isSubmitting = false;
+                    }
                 },
                 editUser(user) {
-                    this.editingUser = { ...user };
+                    this.editingUser = JSON.parse(JSON.stringify(user));
+                    if (this.editingUser) this.editingUser.password = '';
                 },
-                async updateUser(user) {
-                    const index = this.users.findIndex(u => u.id === user.id);
-                    if (index !== -1) {
-                        this.users[index] = user;
-                        await updateData({ users: this.users, items: this.items, transactions: this.transactions });
+                async updateUser(userToUpdate) {
+                    if (!userToUpdate.name || !userToUpdate.username) {
+                        alert('نام و نام کاربری نمی‌تواند خالی باشد.');
+                        return;
+                    }
+                    this.isSubmitting = true;
+                    try {
+                        const payload = {
+                            id: userToUpdate.id,
+                            name: userToUpdate.name,
+                            username: userToUpdate.username,
+                            isadmin: userToUpdate.isadmin,
+                            totalScore: userToUpdate.totalScore || 0
+                        };
+                        if (userToUpdate.password && userToUpdate.password.trim() !== '') {
+                            payload.password = userToUpdate.password;
+                        }
+                        await updateData('users', payload, 'PATCH');
                         this.editingUser = null;
+                        await this.initializeData();
+                        alert('اطلاعات کاربر با موفقیت به‌روزرسانی شد.');
+                    } catch (error) {
+                        alert('خطایی در به‌روزرسانی کاربر رخ داد: ' + error.message);
+                    } finally {
+                        this.isSubmitting = false;
                     }
                 },
                 checkManagementPassword() {
                     if (this.managementPassword === '1403') {
                         this.managementAccess = true;
+                        this.managementPassword = '';
                     } else {
-                        alert('رمز عبور اشتباه است!');
+                        alert('رمز عبور مدیریت اشتباه است!');
                     }
                 },
                 async addUser() {
                     if (!this.newUser.name || !this.newUser.username || !this.newUser.password) {
-                        alert('لطفا تمام فیلدها را پر کنید');
+                        alert('لطفا تمام فیلدهای کاربر جدید را پر کنید.');
                         return;
                     }
                     const existingUser = this.users.find(u => u.username === this.newUser.username);
@@ -1456,79 +2250,256 @@
                         alert('این نام کاربری قبلاً استفاده شده است.');
                         return;
                     }
-                    this.users.push({
-                        id: Date.now(),
-                        ...this.newUser,
-                        loginCount: 0,
-                        totalActivityTime: 0,
-                        dailyLoginCount: {},
-                        dailyActivityTime: {},
-                        lastLoginDate: null,
-                        totalScore: 0
-                    });
-                    await updateData({ users: this.users, items: this.items, transactions: this.transactions });
-                    this.newUser = { name: '', username: '', password: '', isAdmin: false };
+                    this.isSubmitting = true;
+                    try {
+                        const userToAdd = {
+                            name: this.newUser.name,
+                            username: this.newUser.username,
+                            password: this.newUser.password,
+                            isadmin: this.newUser.isadmin || false,
+                            totalScore: 0
+                        };
+                        await updateData('users', userToAdd);
+                        this.newUser = { name: '', username: '', password: '', isadmin: false };
+                        await this.initializeData();
+                        alert('کاربر جدید با موفقیت افزوده شد.');
+                    } catch (error) {
+                        alert('خطایی در افزودن کاربر رخ داد: ' + error.message);
+                    } finally {
+                        this.isSubmitting = false;
+                    }
                 },
                 async addBulkItems() {
-                    const itemsList = this.bulkItems.split('\n').filter(line => line.trim() !== '');
-                    itemsList.forEach(itemLine => {
-                        const [name, unit] = itemLine.split(',');
+                    const lines = this.bulkItems.split('\n').map(line => line.trim()).filter(line => line);
+                    if (lines.length === 0) {
+                        alert('لیست کالاها برای افزودن خالی است.');
+                        return;
+                    }
+                    this.isSubmitting = true;
+                    let successCount = 0;
+                    let failCount = 0;
+                    const now = new Date();
+                    const gregorianDateForDB = formatToGregorianYYYYMMDD(now);
+                    const timeForDB = now.toLocaleTimeString('en-US', { hour12: false });
+
+                    for (const line of lines) {
+                        const parts = line.split(',').map(p => p.trim());
+                        const [name, unit, description = '', warehouse = 'انبار داخل واحد'] = parts;
+
                         if (name && unit) {
-                            this.items.push({
-                                id: Date.now(),
-                                name: name.trim(),
-                                quantity: 0,
-                                unit: unit.trim(),
-                                warehouse: 'انبار داخل واحد'
-                            });
+                            try {
+                                const itemForDB = {
+                                    name: name,
+                                    quantity: 0,
+                                    unit: unit,
+                                    warehouse: warehouse,
+                                    description: description,
+                                    user: this.currentUser.name,
+                                    date: gregorianDateForDB,
+                                    time: timeForDB
+                                };
+                                const exists = this.items.some(i => i.name === name && i.unit === unit && (i.description || '') === description && i.warehouse === warehouse);
+                                if (!exists) {
+                                    await updateData('items', itemForDB);
+                                    successCount++;
+                                } else {
+                                    console.warn(`کالای ${name} در انبار ${warehouse} با این مشخصات از قبل موجود است.`);
+                                    failCount++;
+                                }
+                            } catch (e) {
+                                console.error(`خطا در افزودن کالای ${name} از لیست:`, e);
+                                failCount++;
+                            }
+                        } else {
+                            failCount++;
                         }
-                    });
-                    await updateData({ users: this.users, items: this.items, transactions: this.transactions });
+                    }
                     this.bulkItems = '';
+                    await this.initializeData();
+                    alert(`${successCount} کالا با موفقیت به لیست پایه اضافه شد. ${failCount > 0 ? failCount + ' مورد با خطا مواجه شد یا از قبل موجود بود.' : ''}`);
+                    this.isSubmitting = false;
                 },
-                editStockItem(item) {
-                    this.editingStockItem = { 
-                        id: item.ids[0],
-                        name: item.name, 
-                        unit: item.unit, 
-                        description: item.description || ''
+                editStockItem(itemGroup) {
+                    this.editingStockItem = {
+                        originalKey: itemGroup.key,
+                        name: itemGroup.name,
+                        unit: itemGroup.unit,
+                        description: itemGroup.description || ''
                     };
                     this.activeSection = 'editStockItem';
                 },
                 async saveEditedStockItem() {
-                    const item = this.items.find(i => i.id === this.editingStockItem.id);
-                    if (item) {
-                        const oldName = item.name;
-                        const oldDescription = item.description;
-                        this.items.filter(i => i.name === oldName && i.description === oldDescription).forEach(i => {
-                            i.name = this.editingStockItem.name;
-                            i.unit = this.editingStockItem.unit;
-                            i.description = this.editingStockItem.description;
-                        });
-                    }
-                    await updateData({ users: this.users, items: this.items, transactions: this.transactions });
-                    this.activeSection = 'stock';
-                    this.editingStockItem = null;
-                },
-                addStockItem(item) {
-                    this.newItem.name = item.name;
-                    this.newItem.unit = item.unit;
-                    this.newItem.description = item.description || '';
-                    this.activeSection = 'addItem';
-                },
-                changePassword() {
-                    if (!this.newPassword) {
-                        alert('لطفاً رمز عبور جدید را وارد کنید');
+                    if (!this.editingStockItem || !this.editingStockItem.name || !this.editingStockItem.unit) {
+                        alert('نام و واحد کالا نمی‌تواند خالی باشد.');
                         return;
                     }
-                    this.currentUser.password = this.newPassword;
-                    const userIndex = this.users.findIndex(u => u.id === this.currentUser.id);
-                    if (userIndex !== -1) {
-                        this.users[userIndex].password = this.newPassword;
-                        updateData({ users: this.users, items: this.items, transactions: this.transactions });
-                        alert('رمز عبور با موفقیت تغییر کرد');
+                    this.isSubmitting = true;
+                    try {
+                        const [originalName, originalDescription=''] = this.editingStockItem.originalKey.split('|');
+                        const itemsToUpdate = this.items.filter(i => i.name === originalName && (i.description || '') === originalDescription);
+
+                        if (itemsToUpdate.length > 0) {
+                            const updatePromises = itemsToUpdate.map(i =>
+                                updateData('items', {
+                                    id: i.id,
+                                    name: this.editingStockItem.name,
+                                    unit: this.editingStockItem.unit,
+                                    description: this.editingStockItem.description
+                                }, 'PATCH')
+                            );
+                            await Promise.all(updatePromises);
+                        }
+                        this.activeSection = 'stock';
+                        this.editingStockItem = null;
+                        await this.initializeData();
+                        alert('مشخصات گروه کالا با موفقیت ویرایش شد.');
+                    } catch (error) {
+                        alert('خطایی در ذخیره ویرایش گروه کالا رخ داد: ' + error.message);
+                    } finally {
+                        this.isSubmitting = false;
+                    }
+                },
+                addStockItem(itemGroup) {
+                    this.newItem.name = itemGroup.name;
+                    this.newItem.unit = itemGroup.unit;
+                    this.newItem.description = itemGroup.description || '';
+                    this.activeSection = 'addItem';
+                },
+                async changePassword() {
+                    if (!this.newPassword || this.newPassword.trim() === '') {
+                        alert('لطفاً رمز عبور جدید را وارد کنید.');
+                        return;
+                    }
+                    if (this.newPassword.length < 6) {
+                        alert('رمز عبور جدید باید حداقل ۶ کاراکتر باشد.');
+                        return;
+                    }
+                    this.isSubmitting = true;
+                    try {
+                        await updateData('users', { id: this.currentUser.id, password: this.newPassword }, 'PATCH');
+                        alert('رمز عبور با موفقیت تغییر کرد. لطفاً برای اعمال تغییرات مجدداً وارد شوید.');
                         this.newPassword = '';
-                        this.activeSection = '';
+                        this.logout();
+                    } catch (error) {
+                        alert('خطایی در تغییر رمز عبور رخ داد: ' + error.message);
+                    } finally {
+                        this.isSubmitting = false;
+                    }
+                },
+                toggleSelectAll() {
+                    if (this.selectAll) {
+                        this.selectedItems = [...this.filteredGroupedItems];
+                    } else {
+                        this.selectedItems = [];
+                    }
+                },
+                preparePrintPages() {
+                    const itemsPerPage = this.pageSize === 'a4' ? 24 : 10;
+                    this.printPages = [];
+                    for (let i = 0; i < this.selectedItems.length; i += itemsPerPage) {
+                        this.printPages.push(this.selectedItems.slice(i, i + itemsPerPage));
+                    }
+                },
+                generateQRCodeForItems() {
+                    const container = this.$refs.printLabelsContainer;
+                    if (container) {
+                        const oldQRCodes = container.querySelectorAll('.label-qrcode > canvas, .label-qrcode > img');
+                        oldQRCodes.forEach(el => el.remove());
+                    }
+                    this.$nextTick(() => {
+                        this.printPages.flat().forEach(itemOnPage => {
+                            const qrCodeElement = document.getElementById(`qrcode-${itemOnPage.key}`);
+                            if (qrCodeElement && !qrCodeElement.hasChildNodes()) {
+                                try {
+                                     // Truncate item name to fit better, adjust as needed
+                                    const textToEncode = itemOnPage.name.length > 50 ? itemOnPage.name.substring(0, 50) + '...' : itemOnPage.name;
+
+                                    new QRCode(qrCodeElement, {
+                                        text: textToEncode,
+                                        width: 80,
+                                        height: 80,
+                                        colorDark: "#000000",
+                                        colorLight: "#ffffff",
+                                        correctLevel: QRCode.CorrectLevel.M // Changed to Medium for better data density
+                                    });
+                                } catch (error) {
+                                    console.error(`Error generating QR for ${itemOnPage.name}:`, error);
+                                    qrCodeElement.innerHTML = '<span style="font-size:7pt; color:red;">خطای QR</span>';
+                                }
+                            }
+                        });
+                    });
+                },
+                async printSelectedItems(pageSize) {
+                    if (this.selectedItems.length === 0) {
+                        alert('لطفاً حداقل یک کالا را برای پرینت انتخاب کنید.');
+                        return;
+                    }
+                    this.pageSize = pageSize;
+                    this.preparePrintPages();
+                    const printContainer = this.$refs.printLabelsContainer;
+                    if (printContainer) printContainer.style.display = 'block';
+                    await this.$nextTick();
+                    this.generateQRCodeForItems();
+                    await new Promise(resolve => setTimeout(resolve, 500)); // Give QR codes a moment to render
+                    window.print();
+                    if (printContainer) printContainer.style.display = 'none';
+                },
+                async submitEquipment() {
+                    if (!this.newEquipment.name || !this.newEquipment.recipient) {
+                        alert('لطفا نام تجهیز و تحویل گیرنده را مشخص کنید.');
+                        return;
+                    }
+                    this.isSubmitting = true;
+                    try {
+                        const now = new Date();
+                        const gregorianDateForDB = formatToGregorianYYYYMMDD(now);
+                        const timeForDB = now.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+                        const equipmentToSubmit = {
+                            item_name: this.newEquipment.name,
+                            recipient: this.newEquipment.recipient,
+                            delivery_date: gregorianDateForDB,
+                            delivery_time: timeForDB,
+                            delivered_by: this.currentUser.name,
+                            status: 'delivered',
+                            notes: this.newEquipment.notes || '',
+                            user_id: this.currentUser.id
+                        };
+                        await updateData('equipment', equipmentToSubmit);
+                        this.newEquipment = { name: '', recipient: '', notes: '' };
+                        this.equipmentSuccessMessage = true;
+                        setTimeout(() => this.equipmentSuccessMessage = false, 2000);
+                        await this.initializeData();
+                    } catch (error) {
+                        alert('خطایی در ثبت تحویل تجهیز رخ داد: ' + error.message);
+                    } finally {
+                        this.isSubmitting = false;
+                    }
+                },
+                async returnEquipment(equip) {
+                    if (confirm(`آیا از ثبت بازگشت تجهیز "${equip.item_name}" توسط "${equip.recipient}" مطمئن هستید؟`)) {
+                        this.isSubmitting = true;
+                        try {
+                            const now = new Date();
+                            const gregorianReturnDateForDB = formatToGregorianYYYYMMDD(now);
+                            const returnTimeForDB = now.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+                            const updatedEquipmentData = {
+                                id: equip.id,
+                                status: 'returned',
+                                return_date: gregorianReturnDateForDB,
+                                return_time: returnTimeForDB,
+                                returned_by: this.currentUser.name
+                            };
+                            await updateData('equipment', updatedEquipmentData, 'PATCH');
+                            await this.initializeData();
+                            alert('تجهیز با موفقیت به عنوان "بازگشت داده شده" ثبت شد.');
+                        } catch (error) {
+                            alert('خطایی در ثبت بازگشت تجهیز رخ داد: ' + error.message);
+                        } finally {
+                            this.isSubmitting = false;
+                        }
                     }
                 }
             }
